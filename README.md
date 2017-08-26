@@ -1,4 +1,4 @@
-# Torrench - Command-line torrent search tool
+# Torrench - Command-line torrent search tool (testing)
 ![Build Status](https://travis-ci.org/kryptxy/torrench.svg?branch=master)
 [![GitHub release](https://img.shields.io/github/release/kryptxy/torrench.svg)]()
 [![PyPI](https://img.shields.io/pypi/v/torrench.svg)](https://pypi.python.org/pypi/torrench/)
@@ -6,6 +6,8 @@
 [![PyPI](https://img.shields.io/pypi/pyversions/torrench.svg)]()
 [![Dependency Status](https://gemnasium.com/badges/github.com/kryptxy/torrench.svg)](https://gemnasium.com/github.com/kryptxy/torrench)
 
+_(This is a test branch, and is ought to be unstable. All my tests are conducted here, and final 
+features are pushed onto master)_
 Torrench is a command-line program to search and download torrents from torrent-hosting sites. It's compatible under **Linux and Windows** operating systems. 
 
 * MacOS Users: I don't own a Mac hardware, so unable to test on it. But, I think it should work fine, considering the code is written keeping cross-platform in mind. Try and report back maybe? Thanks.
