@@ -13,15 +13,13 @@ import platform
 from torrench.utilities.find_url import proxy_list
 
 print("""
-#########################
-#                       #
-#    KickAssTorrents    #                         
-#                       #
-#########################
+=============
+|    KickassTorrents    |
+=============
 """)
 
 '''
-Initialisations
+initialisations
 '''
 colorama.init()
 YELLOW = colorama.Fore.YELLOW + colorama.Style.BRIGHT
@@ -103,7 +101,7 @@ variables used:
 If 50 torrents are fetched (means 2 pages) and (-p) argument is 4,
 Then fetching process stops at 2, and no further pages are fetched.
 This is what torrent_count is used for (here)
-   
+
 -- title :: the title given by user
 -- page_limit :: Value of (-p) argument
 This function calls the fetch_results() to obtain results and are stored in 'output'
@@ -171,12 +169,14 @@ def fetch_results(soup):
             name = i.find('a', class_='cellMainLink').get_text().split("[[")[0]
         if OS_WIN:
             try:
-                name = name.encode('ascii', 'replace').decode()  # Handling Unicode characters in windows.
+                # Handling Unicode characters in windows.
+                name = name.encode('ascii', 'replace').decode()
             except AttributeError:
                 pass
 
         torrent_link = i.find('a', class_='cellMainLink')['href']
-        uploader_name = i.find('span', class_='lightgrey').get_text().split(" ")[-4]
+        uploader_name = i.find(
+            'span', class_='lightgrey').get_text().split(" ")[-4]
         category = i.find('span', class_='lightgrey').get_text().split(" ")[-2]
         verified_uploader = i.find('a', {'title': 'Verified Torrent'})
         if verified_uploader != None:
@@ -197,7 +197,8 @@ def fetch_results(soup):
         torrent_count += 1
 
         # Storing each row result in mylist
-        mylist = [category, name, '--' + str(index) + '--', uploader_name, size, date_added, seeds, leeches, comment_count]
+        mylist = [category, name, '--' +
+                  str(index) + '--', uploader_name, size, date_added, seeds, leeches, comment_count]
         # Further, appending mylist to a masterlist. This masterlist stores the required result
         master_list.append(mylist)
 
@@ -208,12 +209,13 @@ def fetch_results(soup):
     global total_fetch_time
     total_fetch_time += page_fetch_time
     print("Torrents: %d [in %.2f sec] \n" % (torrent_count, page_fetch_time))
-    result = tabulate(master_list, headers=['CATEG', 'NAME', 'INDEX', 'UPLOADER', 'SIZE', 'DATE', 'S', 'L', 'C'], tablefmt='grid')
+    result = tabulate(master_list, headers=[
+                      'CATEG', 'NAME', 'INDEX', 'UPLOADER', 'SIZE', 'DATE', 'S', 'L', 'C'], tablefmt='grid')
     return result
 
 
 '''
-Function called after output table is displayed. 
+Function called after output table is displayed.
 Displays text and following info:
 - Total torrents fetched (index)
 - Time taken to fetch all torrents (total_fetch_time)
@@ -295,7 +297,8 @@ def main(title, page_limit):
         proxy_list = proxy_select()
         url = cycle_proxies(proxy_list)
         output = soup_output(url, title, page_limit)
-        print("\nS=SEEDS; L=LEECHES; C=COMMENTS; " + YELLOW + "YELLOW UPLOADERS " + RESET + "are Verified Uploaders")
+        print("\nS=SEEDS; L=LEECHES; C=COMMENTS; " + YELLOW +
+              "YELLOW UPLOADERS " + RESET + "are Verified Uploaders")
         print(output)
         after_output_text()
         get_torrent(url)

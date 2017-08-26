@@ -14,11 +14,9 @@ from torrench.utilities.find_url import proxy_list
 from torrench.modules.tpb_details import get_details
 
 print("""
-######################
-#                    #
-#    ThePirateBay    #
-#                    #
-######################
+============
+|    ThePirateBay    |
+============
 """)
 
 
@@ -106,7 +104,7 @@ variables used:
 If 50 torrents are fetched (means 2 pages) and (-p) argument is 4,
 Then fetching process stops at 2, and no further pages are fetched.
 This is what torrent_count is used for (here)
-   
+
 -- title :: the title given by user
 -- page_limit :: Value of (-p) argument
 This function calls the fetch_results() to obtain results and are stored in 'output'
@@ -175,11 +173,14 @@ def fetch_results(soup):
             uploader = uploader.string
 
         if OS_WIN:
-            name = name.encode('ascii', 'replace').decode()  # Handling Unicode characters in windows.
+            # Handling Unicode characters in windows.
+            name = name.encode('ascii', 'replace').decode()
 
-        comments = i.find('img', {'src': '//%s/static/img/icon_comment.gif' % (website_url)})
+        comments = i.find(
+            'img', {'src': '//%s/static/img/icon_comment.gif' % (website_url)})
         if comments != None:
-            comment = comments['alt'].split(" ")[-2]  # Total number of comments
+            comment = comments['alt'].split(
+                " ")[-2]  # Total number of comments
         else:
             comment = "0"
 
@@ -195,17 +196,21 @@ def fetch_results(soup):
         sub_categ = i.find('td', class_="vertTh").find_all('a')[1].string
         seeds = i.find_all('td', align="right")[0].string
         leeches = i.find_all('td', align="right")[1].string
-        date = i.find('font', class_="detDesc").get_text().split(' ')[1].replace(',', "")
-        size = i.find('font', class_="detDesc").get_text().split(' ')[3].replace(',', "")
+        date = i.find('font', class_="detDesc").get_text().split(
+            ' ')[1].replace(',', "")
+        size = i.find('font', class_="detDesc").get_text().split(
+            ' ')[3].replace(',', "")
         torr_id = i.find('a', {'class': 'detLink'})["href"].split('/')[2]
         link = "https://%s/torrent/%s" % (website_url, torr_id)
-        magnet = i.find_all('a', {'title': 'Download this torrent using magnet'})[0]['href']
+        magnet = i.find_all('a', {'title': 'Download this torrent using magnet'})[
+            0]['href']
 
         global index
         index += 1
         torrent_count += 1
         # Storing each row result in mylist
-        mylist = [categ + " > " + sub_categ, name, "--" + str(index) + "--", uploader, size, seeds, leeches, date, comment]
+        mylist = [categ + " > " + sub_categ, name, "--" +
+                  str(index) + "--", uploader, size, seeds, leeches, date, comment]
         # Further, appending mylist to a masterlist. This masterlist stores the required result
         master_list.append(mylist)
 
@@ -216,12 +221,13 @@ def fetch_results(soup):
     global total_fetch_time
     total_fetch_time += page_fetch_time
     print("Torrents: %d [in %.2f sec] \n" % (torrent_count, page_fetch_time))
-    result = tabulate(master_list, headers=['CATEG', 'NAME', 'INDEX', 'UPLOADER', 'SIZE', 'DATE', 'S', 'L', 'C'], tablefmt='grid')
+    result = tabulate(master_list, headers=[
+                      'CATEG', 'NAME', 'INDEX', 'UPLOADER', 'SIZE', 'DATE', 'S', 'L', 'C'], tablefmt='grid')
     return result
 
 
 '''
-Function called after output table is displayed. 
+Function called after output table is displayed.
 Displays text and following info:
 - Total torrents fetched (index)
 - Time taken to fetch all torrents (total_fetch_time)
@@ -280,10 +286,12 @@ def get_torrent(url):
             continue
 
         print("Selected index [%d] - %s\n" % (index, selected_torrent))
-        option2 = input("1. Print magnetic link [m]\n2. Get torrent details [g]\n\nOption [m/g]: ")
+        option2 = input(
+            "1. Print magnetic link [m]\n2. Get torrent details [g]\n\nOption [m/g]: ")
         if option2 == 'm' or option2 == 'g':
             if option2 == 'm':
-                print("\nMagnetic link - %s" % (RED + req_magnetic_link + RESET))
+                print("\nMagnetic link - %s" %
+                      (RED + req_magnetic_link + RESET))
                 uip = input("\nLoad to torrent client? [y/n]: ")
                 if uip == 'y' or uip == 'Y':
                     try:
@@ -292,7 +300,8 @@ def get_torrent(url):
                         print(e)
                         continue
             elif option2 == 'g' or option2 == 'G':
-                print("Fetching details for torrent index [%d] : %s" % (index, selected_torrent))
+                print("Fetching details for torrent index [%d] : %s" % (
+                    index, selected_torrent))
                 file_url = get_details(torrent_link, str(index))
                 file_url = YELLOW + file_url + RESET
                 print("File URL: " + file_url + "\n")

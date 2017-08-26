@@ -10,19 +10,29 @@ if platform.system() == 'Windows':
 
     from multiprocessing import Queue
     import ctypes
-    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 3)
-    os.system("mode CON: COLS=180 LINES=350") 	# Expand windows console window so output does not overlap (font==default).
+    ctypes.windll.user32.ShowWindow(
+        ctypes.windll.kernel32.GetConsoleWindow(), 3)
+    # Expand windows console window so output does not overlap (font==default).
+    os.system("mode CON: COLS=180 LINES=350")
 
 
 def args():
-    parser = argparse.ArgumentParser(description="Command-line torrent search tool.")
-    parser.add_argument("-d", "--distrowatch", action="store_true", help="Search distrowatch")
-    parser.add_argument("-t", "--thepiratebay", action="store_true", help="Search thepiratebay (TPB)")
-    parser.add_argument("-k", "--kickasstorrent", action="store_true", help="Search KickassTorrent (KAT)")
-    parser.add_argument("search", help="Enter search string", nargs="?", default=None)
-    parser.add_argument("-p", "--page-limit", type=int, help="Number of pages to fetch results from (1 page = 30 results).\n [default: 1]", default=1, dest="limit")
-    parser.add_argument("-c", "--clear-html", action="store_true", default=False, help="Clear all [TPB] torrent description HTML files and exit.")
-    parser.add_argument("-v", "--version", action='version', version=__version__, help="Display version and exit.")
+    parser = argparse.ArgumentParser(
+        description="Command-line torrent search tool.")
+    parser.add_argument("-d", "--distrowatch",
+                        action="store_true", help="Search distrowatch")
+    parser.add_argument("-t", "--thepiratebay",
+                        action="store_true", help="Search thepiratebay (TPB)")
+    parser.add_argument("-k", "--kickasstorrent",
+                        action="store_true", help="Search KickassTorrent (KAT)")
+    parser.add_argument("search", help="Enter search string",
+                        nargs="?", default=None)
+    parser.add_argument("-p", "--page-limit", type=int,
+                        help="Number of pages to fetch results from (1 page = 30 results).\n [default: 1]", default=1, dest="limit")
+    parser.add_argument("-c", "--clear-html", action="store_true", default=False,
+                        help="Clear all [TPB] torrent description HTML files and exit.")
+    parser.add_argument("-v", "--version", action='version',
+                        version=__version__, help="Display version and exit.")
     args = parser.parse_args()
     main(args)
 
@@ -50,7 +60,8 @@ def torrent_fetch(args):
     page_limit = args.limit
     if args.thepiratebay or args.kickasstorrent:
         if not check_config.file_exists():
-            print("\nConfig file not configured. Configure to continue. Read docs for more info.\n")
+            print(
+                "\nConfig file not configured. Configure to continue. Read docs for more info.\n")
             sys.exit(2)
         else:
             if args.thepiratebay:

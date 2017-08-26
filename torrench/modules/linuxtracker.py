@@ -9,12 +9,9 @@ from tabulate import tabulate
 import sys
 
 print("""
-######################
-#                    #
-#    LinuxTracker    #
-# (linuxtracker.org) #                       
-#                    #
-######################
+===========
+|    LinuxTracker   |
+===========
 """)
 
 mylist = []
@@ -89,7 +86,8 @@ def display_categories():
         categ_code = categories[i]['value']
         print("[%d] %s" % (count, categ_name))
         category_name[count] = categ_name  # Mapping name with index number
-        category_code[categ_name] = categ_code  # Mapping name with category code
+        # Mapping name with category code
+        category_code[categ_name] = categ_code
         count += 1
     return categ_len
 
@@ -113,9 +111,11 @@ def fetch_results(title, categ_url_code):
     print("Fetching results...")
 
     if categ_url_code == None:
-        url = "http://linuxtracker.org/index.php?page=torrents&search=%s&active=1" % (title)
+        url = "http://linuxtracker.org/index.php?page=torrents&search=%s&active=1" % (
+            title)
     else:
-        url = "http://linuxtracker.org/index.php?page=torrents&search=%s&category=%d&active=1" % (title, categ_url_code)
+        url = "http://linuxtracker.org/index.php?page=torrents&search=%s&category=%d&active=1" % (
+            title, categ_url_code)
     soup = http_request(url)
     content = soup.find_all('table', {'class': 'lista', 'width': '100%'})
     search_results = content[4]
@@ -123,11 +123,13 @@ def fetch_results(title, categ_url_code):
         try:
             name = i.font.a.string
             date = i.find_all('tr')[0].get_text().split(' ')[-2]
-            size = i.find_all('tr')[1].td.find(recursive=False, text=True).replace(' ', '')
+            size = i.find_all('tr')[1].td.find(
+                recursive=False, text=True).replace(' ', '')
             seeds = i.find_all('tr')[2].get_text().split(' ')[-2]
             leeches = i.find_all('tr')[3].get_text().split(' ')[-2]
             completed = i.find_all('tr')[4].get_text().split(' ')[-3]
-            dload = i.find_all('td', {'align': 'right'})[0].find_all('a')[1]['href']
+            dload = i.find_all('td', {'align': 'right'})[
+                0].find_all('a')[1]['href']
             global index
             index += 1
 
@@ -136,7 +138,8 @@ def fetch_results(title, categ_url_code):
             index_to_dload[str(index)] = dload
 
             # Storing each row result in mylist
-            mylist = [name, "--" + str(index) + "--", size, seeds, leeches, completed, date]
+            mylist = [name, "--" + str(index) + "--",
+                      size, seeds, leeches, completed, date]
             # Further, appending mylist to a masterlist. This masterlist stores the required result
             masterlist.append(mylist)
         except AttributeError:
@@ -145,7 +148,8 @@ def fetch_results(title, categ_url_code):
         print("\nNo results for give input!\n")
         sys.exit(2)
 
-    output = tabulate(masterlist, headers=['NAME', 'INDEX', 'SIZE', 'S', 'L', 'C', 'ADDED ON', ], tablefmt="grid")
+    output = tabulate(masterlist, headers=[
+                      'NAME', 'INDEX', 'SIZE', 'S', 'L', 'C', 'ADDED ON', ], tablefmt="grid")
     return output
 
 
@@ -165,8 +169,10 @@ def select_torrent():
                 print("\nBye!")
                 break
             else:
-                print("\nSelected index[%s] - %s" % (opt, index_to_name[str(opt)]))
-                download("%s%s" % ("http://linuxtracker.org/", index_to_dload[str(opt)]))
+                print("\nSelected index[%s] - %s" %
+                      (opt, index_to_name[str(opt)]))
+                download("%s%s" %
+                         ("http://linuxtracker.org/", index_to_dload[str(opt)]))
         except KeyError:
             print("\nBad Input!\n")
         except ValueError:
@@ -185,7 +191,8 @@ def download(dload_url):
     home = os.path.expanduser(os.path.join('~', 'Downloads'))
     downloads_dir = os.path.join(home, 'torrench')
     soup = http_request(dload_url)
-    link = soup.find_all('td', {'align': 'center', 'class': 'blocklist'})[-1].a['href']
+    link = soup.find_all(
+        'td', {'align': 'center', 'class': 'blocklist'})[-1].a['href']
     torrent_name = link.split('&')[1].split('=')[1]
 
     if not os.path.exists(downloads_dir):

@@ -2,15 +2,6 @@
 Modified for DistroWatch by Jesse Smith <jsmith@resonatingmedia.com>
 '''
 
-print("""
-#####################
-#                   #
-#    DistroWatch    #
-# (distrowatch.com) #                       
-#                   #
-#####################
-""")
-
 import os
 import requests
 from bs4 import BeautifulSoup
@@ -18,10 +9,15 @@ from tabulate import tabulate
 import colorama
 import sys
 
+print("""
+===========
+|    DistroWatch    |
+===========
+""")
+
 colorama.init()
 YELLOW = colorama.Fore.YELLOW + colorama.Style.BRIGHT
 RESET = colorama.Style.RESET_ALL
-
 urllist = []
 index_to_name = {}
 
@@ -69,7 +65,8 @@ def fetch_results(soup, title):
     if index == 0:
         return 0
 
-    output = tabulate(masterlist, headers=['NAME', 'INDEX', 'UPLOADED'], tablefmt="grid")
+    output = tabulate(masterlist, headers=[
+                      'NAME', 'INDEX', 'UPLOADED'], tablefmt="grid")
     return output
 
 
@@ -142,4 +139,4 @@ def main(title):
 
 
 if __name__ == "__main__":
-    print("Its a module!")
+    main("ubuntu")
