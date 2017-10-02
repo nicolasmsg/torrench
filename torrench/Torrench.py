@@ -10,9 +10,6 @@ from utilities.Config import Config
 
 logger = logging.getLogger('log1')
 
-__version__ = '1.0.54'
-
-# v_print = None
 
 class Torrench(Config):
 
@@ -99,11 +96,6 @@ def search(search, distrowatch, thepiratebay, kickasstorrent, skytorrents, nyaa,
         xbit
     ) # These modules are only enabled through manual configuration.
 
-    #configure verbose
-    # _v_print = print if verbose else logger.debug 
-    # global v_print
-    # v_print = _v_print
-
     torrench.input_title = search
     torrench.page_limit = page_limit
     torrench.copy = copy
@@ -162,8 +154,8 @@ def search(search, distrowatch, thepiratebay, kickasstorrent, skytorrents, nyaa,
         import modules.distrowatch as distrowatch
         distrowatch.main(torrench.input_title)
     else:
-        v_print("Using linuxtracker")
-        v_print("Input title: [%s]" % (torrench.input_title))
+        logger.debug("Using linuxtracker")
+        logger.debug("Input title: [%s]" % (torrench.input_title))
         import modules.linuxtracker as linuxtracker
         linuxtracker.main(torrench.input_title)
 
