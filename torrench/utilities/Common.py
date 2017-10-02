@@ -141,7 +141,7 @@ class Common:
 
     def copy_magnet(self, link):
         """Copy magnetic link to clipboard."""
-        from torrench import Torrench
+        from torrench.Torrench import Torrench
         tr = Torrench()
         if tr.check_copy():
             try:

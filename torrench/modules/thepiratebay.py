@@ -3,8 +3,8 @@
 import sys
 import platform
 import logging
-import modules.tpb_details as tpb_details
-from utilities.Config import Config
+import torrench.modules.tpb_details as tpb_details
+from torrench.utilities.Config import Config
 import click
 
 class ThePirateBay(Config):

@@ -2,7 +2,7 @@
 
 import sys
 import logging
-from utilities.Common import Common
+from torrench.utilities.Common import Common
 import click
 
 

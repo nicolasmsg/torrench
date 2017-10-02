@@ -5,7 +5,7 @@ import sys
 import argparse
 import logging
 import click
-from utilities.Config import Config
+from torrench.utilities.Config import Config
 
 
 logger = logging.getLogger('log1')
@@ -135,12 +135,12 @@ def search(search, distrowatch,
                     torrench.input_title = None
                     torrench.page_limit = None
                 logger.debug("Input title: [%s] ; page_limit: [%s]" % (torrench.input_title, torrench.page_limit))
-                import modules.thepiratebay as tpb
+                import torrench.modules.thepiratebay as tpb
                 tpb.main(torrench.input_title, torrench.page_limit)
             elif kickasstorrent:
                 logger.debug("Using kickasstorrents")
                 logger.debug("Input title: [%s] ; page_limit: [%s]" % (torrench.input_title, torrench.page_limit))
-                import modules.kickasstorrent as kat
+                import torrench.modules.kickasstorrent as kat
                 kat.main(torrench.input_title, torrench.page_limit)
             elif skytorrents:
                 logger.debug("Using skytorrents")
@@ -149,30 +149,30 @@ def search(search, distrowatch,
                     torrench.input_title = None
                     torrench.page_limit = None
                 logger.debug("Input title: [%s] ; page_limit: [%s]" % (torrench.input_title, torrench.page_limit))
-                import modules.skytorrents as sky
+                import torrench.modules.skytorrents as sky
                 sky.main(torrench.input_title, torrench.page_limit)           
             elif nyaa:
                 logger.debug("Using Nyaa.si")
-                import modules.nyaa as nyaa
+                import torrench.modules.nyaa as nyaa
                 nyaa.main(torrench.input_title)
             elif xbit:
                 logger.debug("Using XBit.pw")
                 logger.debug("Input title: [%s]" % (torrench.input_title))
-                import modules.xbit as xbit
+                import torrench.modules.xbit as xbit
                 xbit.main(torrench.input_title)
     elif distrowatch:
         logger.debug("Using distrowatch")
         logger.debug("Input title: [%s]" % (torrench.input_title))
-        import modules.distrowatch as distrowatch
+        import torrench.modules.distrowatch as distrowatch
         distrowatch.main(torrench.input_title)
     elif interactive:
         logger.debug("Using interactive mode")
-        import utilities.interactive as interactive
+        import torrench.utilities.interactive as interactive
         interactive.inter()
     else:
         logger.debug("Using linuxtracker")
         logger.debug("Input title: [%s]" % (torrench.input_title))
-        import modules.linuxtracker as linuxtracker
+        import torrench.modules.linuxtracker as linuxtracker
         linuxtracker.main(torrench.input_title)
 
 

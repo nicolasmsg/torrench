@@ -1,14 +1,14 @@
 
 import logging
 from sys import exit as _exit
-import modules.distrowatch as distrowatch
-import modules.kickasstorrent as kat
-import modules.linuxtracker as linuxtracker
-import modules.nyaa as nyaa_module
-import modules.skytorrents as sky
-import modules.thepiratebay as tpb_module
-import modules.xbit as xbit_module
-from utilities.Config import Config
+import torrench.modules.distrowatch as distrowatch
+import torrench.modules.kickasstorrent as kat
+import torrench.modules.linuxtracker as linuxtracker
+import torrench.modules.nyaa as nyaa_module
+import torrench.modules.skytorrents as sky
+import torrench.modules.thepiratebay as tpb_module
+import torrench.modules.xbit as xbit_module
+from torrench.utilities.Config import Config
 import click
 
 
