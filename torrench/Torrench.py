@@ -13,15 +13,21 @@ logger = logging.getLogger('log1')
 
 class Torrench(Config):
 
+    __version__ = "Torrench (1.0.54)"
+
     def __init__(self):
         """Initialisations."""
         Config.__init__(self)
-        self.__version__ = "Torrench (1.0.54)"
         self.logger = logging.getLogger('log1')
         self.args = None # Should probable be deleted
         self.copy = False
         self.input_title = None
         self.page_limit = 0
+        self.interactive = False
+
+    # @staticmethod
+    # def get_version():
+    #     return self.__version__
 
     def remove_temp_files(self):
         """
@@ -59,7 +65,7 @@ class Torrench(Config):
 
     def verify_input(self):
         """To verify if input given is valid or not."""
-        if self.input_title is None:
+        if self.input_title is None and not self.interactive:
             self.logger.debug("Bad input! Input string expected! Got 'None'")
             click.echo("\nInput string expected.\nUse --help for more\n")
             sys.exit(2)
@@ -79,14 +85,19 @@ torrench = Torrench()
 @click.option('-s','--skytorrents', is_flag=True, help='Search SkyTorrents')
 @click.option('-n', '--nyaa', is_flag=True, help='Search Nyaa')
 @click.option('-x', '--xbit', is_flag=True, help='Search XBit.pw')
+@click.option('-i', '--interactive', is_flag=True, help='Enable interactive mode for searches')
 @click.option('--top', is_flag=True, help='Get top torrents [TPB/SkyTorrents]')
 @click.option('--copy', is_flag=True, help='Copy magnetic link to clipboard')
 @click.option('-p', '--page-limit', default=1, help='LIMIT Number of pages to fetch results from (1 page = 30 results). [default: 1] [TPB/KAT/SkyTorrents]')
 @click.option('-c', '--clear-html', is_flag=True, help='Clear all [TPB] torrent description HTML files and exit.')
 # @click.option('-v', '--verbose', is_flag=True, help='Print debugs.')
-@click.version_option(__version__)
-@click.argument('search')
-def search(search, distrowatch, thepiratebay, kickasstorrent, skytorrents, nyaa, xbit, top, copy, page_limit, clear_html):
+@click.version_option(Torrench.__version__)
+@click.argument('search', required=False)
+def search(search, distrowatch,
+           thepiratebay, kickasstorrent,
+           skytorrents, nyaa, xbit, top,
+           copy, page_limit, clear_html,
+           interactive):
     """Command-line torrent search tool."""
     _PRIVATE_MODULES = (
         thepiratebay,
@@ -99,8 +110,9 @@ def search(search, distrowatch, thepiratebay, kickasstorrent, skytorrents, nyaa,
     torrench.input_title = search
     torrench.page_limit = page_limit
     torrench.copy = copy
+    torrench.interactive = interactive 
 
-    if not clear_html:
+    if not clear_html and not interactive:
         torrench.verify_input()
         torrench.input_title = torrench.input_title.replace("'", "")
 
@@ -153,6 +165,10 @@ def search(search, distrowatch, thepiratebay, kickasstorrent, skytorrents, nyaa,
         logger.debug("Input title: [%s]" % (torrench.input_title))
         import modules.distrowatch as distrowatch
         distrowatch.main(torrench.input_title)
+    elif interactive:
+        logger.debug("Using interactive mode")
+        import utilities.interactive as interactive
+        interactive.inter()
     else:
         logger.debug("Using linuxtracker")
         logger.debug("Input title: [%s]" % (torrench.input_title))

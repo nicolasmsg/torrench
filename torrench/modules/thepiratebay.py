@@ -262,7 +262,7 @@ class ThePirateBay(Config):
                 if temp == 0:
                     click.echo("\nBye!")
                     self.logger.debug("Torrench quit!")
-                    sys.exit(2)
+                    break
                 elif temp < 0:
                     click.echo("\nBad Input!")
                     continue

@@ -167,7 +167,7 @@ def main(title):
     try:
         click.echo("\n[LinuxTracker]\n")
         ltr = LinuxTracker(title)
-        if click.confirm("Display categories? : ")
+        if click.confirm("Display categories? : "):
             ltr.logger.debug("Display categories: %c" % (temp))
             ltr.display_categories()
             ltr.select_category()
