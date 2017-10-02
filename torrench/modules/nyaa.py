@@ -3,7 +3,9 @@
 import sys
 import logging
 import platform
-from torrench.utilities.Config import Config
+from utilities.Config import Config
+import click
+
 
 class NyaaTracker(Config):
     """
@@ -46,21 +48,21 @@ class NyaaTracker(Config):
         counter = 0
         if _torrench_proxies:
             for proxy in _torrench_proxies:
-                print("Testing: {proxy}".format(proxy=self.colorify("yellow", proxy)))
+                click.echo("Testing: {proxy}".format(proxy=click.style(proxy, fg='yellow')))
                 proxy_soup = self.http_request(proxy+'/?f=0&c=0_0&q=hello&s=seeders&o=desc')
                 self.logger.debug("Testing {proxy} as a possible candidate.".format(proxy=proxy))
                 if not proxy_soup.find_all('td', {'colspan': '2'}):
-                    print("{proxy} was a bad proxy. Trying next proxy.".format(proxy=proxy))
+                    click.echo("{proxy} was a bad proxy. Trying next proxy.".format(proxy=proxy))
                     counter += 1
                     if counter == len(_torrench_proxies):
                         self.logger.debug("Proxy list finished. No valid proxies were found.")
-                        print("Failed to find any valid proxies. Terminating.")
+                        click.echo("Failed to find any valid proxies. Terminating.")
                         return -1
                 else:
-                    print("Proxy `{proxy}` is available. Connecting.".format(proxy=proxy))
+                    click.echo("Proxy `{proxy}` is available. Connecting.".format(proxy=proxy))
                     self.logger.debug("Proxy `{proxy}` is a valid proxy.")
                     return proxy
-        print("No proxies were given.")
+        click.echo("No proxies were given.")
         return -1
 
     def parse_name(self):
@@ -75,7 +77,7 @@ class NyaaTracker(Config):
             t_names.append(n)
         if t_names:
             return t_names
-        print("Unable to parse torrent name.")
+        click.echo("Unable to parse torrent name.")
         sys.exit(2)
 
     def parse_urls(self):
@@ -83,12 +85,12 @@ class NyaaTracker(Config):
         for url in self.soup.find_all('a'):
             try:
                 if url.get('href').startswith('/download/'):
-                    t_urls.append(self.colorify('yellow', 'https://nyaa.si'+url['href']))
+                    t_urls.append(click.style('https://nyaa.si'+url['href'], fg='yellow'))
             except AttributeError:
                 pass
         if t_urls:
             return t_urls
-        print("Unable to parse torrent URLs.")
+        click.echo("Unable to parse torrent URLs.")
         sys.exit(2)
 
     def parse_magnets(self):
@@ -101,7 +103,7 @@ class NyaaTracker(Config):
                 pass
         if t_magnets:
             return t_magnets
-        print("Unable to parse magnet links.")
+        click.echo("Unable to parse magnet links.")
         sys.exit(2)
 
     def parse_sizes(self):
@@ -111,30 +113,30 @@ class NyaaTracker(Config):
                 if self.OS_WIN:
                     t_size.append( size.get_text())
                 else:
-                    t_size.append(self.colorify("yellow", size.get_text()))
+                    t_size.append(click.style(size.get_text(), fg='yellow'))
             else:
                 pass
         if t_size:
             return t_size
-        print("Unable to parse size of files.")
+        click.echo("Unable to parse size of files.")
         sys.exit(2)
 
     def parse_seeds(self):
         t_seeds = []
         for seed in self.soup.find_all('td', {'style': 'color: green;'}):
-            t_seeds.append(self.colorify("green", seed.get_text()))
+            t_seeds.append(click.style(seed.get_text(), fg="green"))
         if t_seeds:
             return t_seeds
-        print("Unable to parse seeds")
+        click.echo("Unable to parse seeds")
         sys.exit(2)
 
     def parse_leeches(self):
         t_leeches = []
         for leech in self.soup.find_all('td', {'style': 'color: red;'}):
-            t_leeches.append(self.colorify("red", leech.get_text()))
+            t_leeches.append(click.style(leech.get_text(), fg="red"))
         if t_leeches:
             return t_leeches
-        print("Unable to parse leechers")
+        click.echo("Unable to parse leechers")
         sys.exit(2)
 
     def fetch_results(self):
@@ -144,7 +146,7 @@ class NyaaTracker(Config):
         @datafanatic:
         Work in progress
         """
-        print("Fetching results")
+        click.echo("Fetching results")
         self.logger.debug("Fetching...")
         self.logger.debug("URL: %s", self.url)
         try:
@@ -156,11 +158,11 @@ class NyaaTracker(Config):
             magnets = self.parse_magnets()
             self.index = len(urls)
         except (KeyError, AttributeError) as e:
-            print("Something went wrong. Logging and terminating.")
+            click.echo("Something went wrong. Logging and terminating.")
             self.logger.exception(e)
-            print("OK. Terminating.")
+            click.echo("OK. Terminating.")
         if self.index == 0:
-            print("No results were found for the given query. Terminating")
+            click.echo("No results were found for the given query. Terminating")
             self.logger.debug("No results were found for `%s`.", self.title)
             return -1
         self.logger.debug("Results fetched. Showing table.")
@@ -171,24 +173,24 @@ class NyaaTracker(Config):
         """Select torrent from table using index."""
         while True:
             try:
-                prompt = int(input("\n\n(0 to exit)\nIndex > "))
+                prompt = click.prompt("\n\n(0 to exit)\nIndex > ", type=int)
                 self.logger.debug("Selected index {idx}".format(idx=prompt))
                 if prompt == 0:
-                    print("Bye!")
+                    click.echo("Bye!")
                     break
                 else:
                     selected_torrent, download_url, magnet_url = self.mapper[0][0][prompt-1], self.mapper[0][1][prompt-1], self.mapper[0][2][prompt-1]
-                    selected_torrent = self.colorify("yellow", selected_torrent)
-                    print("Selected index [{idx}] - {torrent}\n".format(idx=prompt, torrent=selected_torrent))
+                    selected_torrent = click.style(selected_torrent, fg="yellow")
+                    click.echo("Selected index [{idx}] - {torrent}\n".format(idx=prompt, torrent=selected_torrent))
                     # Print Magnetic link / load magnet to client
-                    prompt2 = input("1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
+                    prompt2 = click.prompt("1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ", type=str)
                     prompt2 = prompt2.lower()
                     self.logger.debug("selected option: [%c]" % (prompt2))
                     if prompt2 == 'p':
                         self.logger.debug("printing magnetic link and upstream link")
-                        print("\nMagnet link: {magnet}".format(magnet=self.colorify("red", magnet_url)))
+                        click.echo("\nMagnet link: {magnet}".format(magnet=click.style(magnet_url, fg="red")))
                         self.copy_magnet(magnet_url)
-                        print("\n\nUpstream link: {url}\n".format(url=download_url))
+                        click.echo("\n\nUpstream link: {url}\n".format(url=download_url))
                     elif prompt2 == 'l':
                         try:
                             self.logger.debug("Loading torrent to client")
@@ -197,7 +199,7 @@ class NyaaTracker(Config):
                             self.logger.exception(e)
                             continue
             except (ValueError, IndexError, TypeError) as e:
-                print("\nBad Input!")
+                click.echo("\nBad Input!")
                 self.logger.exception(e)
                 continue
 
@@ -210,14 +212,14 @@ def main(title):
     Execution will begin here.
     """
     try:
-        print("\n[Nyaa.si]\n")
+        click.echo("\n[Nyaa.si]\n")
         nyaa = NyaaTracker(title)
         results = nyaa.fetch_results()
         nyaa.show_output([result for result in results], nyaa.output_headers)
         nyaa.select_torrent()
     except KeyboardInterrupt:
         nyaa.logger.debug("Interrupt detected. Terminating.")
-        print("Terminated")
+        click.echo("Terminated")
 
 
 if __name__ == "__main__":

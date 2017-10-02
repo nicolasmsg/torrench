@@ -2,7 +2,8 @@
 
 import sys
 import logging
-from torrench.utilities.Common import Common
+from utilities.Common import Common
+import click
 
 
 class DistroWatch(Common):
@@ -52,14 +53,14 @@ class DistroWatch(Common):
                     self.logger.exception(e)
                     pass
             if self.index == 0:
-                print("No results found for give input!")
+                click.echo("No results found for give input!")
                 self.logger.debug("\nNo results found for given input! Exiting!")
                 sys.exit(2)
             return masterlist
         except Exception as e:
             self.logger.exception(e)
-            print("Error message: %s" %(e))
-            print("Something went wrong! See logs for details. Exiting!")
+            click.echo("Error message: %s" %(e))
+            click.echo("Something went wrong! See logs for details. Exiting!")
             sys.exit(2)
 
     def select_torrent(self):
@@ -71,40 +72,40 @@ class DistroWatch(Common):
         Default download location is $HOME/downloads/torrench
         """
         self.logger.debug("Selecting torrent...")
-        print("\nTorrent can be downloaded directly through index\n")
+        click.echo("\nTorrent can be downloaded directly through index\n")
         temp = 9999
         while(temp != 0):
             try:
-                temp = int(input("(0 = exit)\nindex > "))
+                temp = click.prompt("(0 = exit)\nindex > ", type=int)
                 self.logger.debug("input index %d" % (temp))
                 if temp == 0:
-                    print("\nBye!")
+                    click.echo("\nBye!")
                     self.logger.debug("Torrench quit!")
                     break
                 elif temp < 0:
                     self.logger.debug("Invalid input index %d" % (temp))
-                    print("\nBad Input\n")
+                    click.echo("\nBad Input\n")
                     continue
                 else:
                     selected_torrent = self.mapper[temp-1]
                     self.logger.debug("selected torrent: %s ; index: %d" % (selected_torrent, temp))
-                    selected_torrent = self.colorify("yellow", selected_torrent)
+                    selected_torrent = click.style(selected_torrent, fg="yellow")
                     torrent_url = self.urllist[temp-1]
                     torrent_name = torrent_url.split('/')[5]
-                    print("\nSelected index [%s] - %s" % (temp, selected_torrent))
+                    click.echo("\nSelected index [%s] - %s" % (temp, selected_torrent))
                     self.download(torrent_url, torrent_name)
             except (ValueError, IndexError, KeyError) as e:
                 self.logger.exception(e)
-                print("\nBad Input\n")
+                click.echo("\nBad Input\n")
 
 
 def main(title):
     """Execution begins here."""
     try:
-        print("\n[DistroWatch]\n")
+        click.echo("\n[DistroWatch]\n")
         title = title.lower()
         dw = DistroWatch(title)
-        print("Fetching results...")
+        click.echo("Fetching results...")
         dw.soup = dw.http_request(dw.url)
         masterlist = dw.fetch_results()
         dw.logger.debug("Results fetched successfully!")
@@ -112,7 +113,7 @@ def main(title):
         dw.select_torrent()
     except KeyboardInterrupt as e:
         dw.logger.debug("Keyboard interupt! Exiting!")
-        print("\n\nAborted!")
+        click.echo("\n\nAborted!")
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 import os
 import logging
 from configparser import SafeConfigParser
-from torrench.utilities.Common import Common
+from .Common import Common
 
 
 class Config(Common):
@@ -33,6 +33,7 @@ class Config(Common):
         self.name = None
         self.urllist = []
         self.logger = logging.getLogger('log1')
+        self._is_verbose = False
 
     def file_exists(self):
         """To check whether config.ini file exists and is enabled or not."""

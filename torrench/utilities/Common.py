@@ -12,6 +12,7 @@ import subprocess
 import webbrowser
 import pyperclip
 from configparser import SafeConfigParser
+import click
 
 
 class Common:
@@ -68,12 +69,12 @@ class Common:
                 return -1
             except KeyboardInterrupt as e:
                 self.logger.exception(e)
-                print("\nAborted!\n")
+                click.echo("\nAborted!\n")
             self.raw = self.raw.content
             self.soup = BeautifulSoup(self.raw, 'lxml')
             return self.soup, self.page_fetch_time
         except KeyboardInterrupt as e:
-            print("Aborted!")
+            click.echo("Aborted!")
             self.logger.exception(e)
             sys.exit(2)
 
@@ -96,7 +97,7 @@ class Common:
             self.soup = BeautifulSoup(self.raw, 'lxml')
             return self.soup
         except KeyboardInterrupt as e:
-            print("Aborted!")
+            click.echo("Aborted!")
             self.logger.exception(e)
             sys.exit(2)
 
@@ -118,50 +119,37 @@ class Common:
                 self.logger.debug("created directory: %s", (downloads_dir))
 
             with open(os.path.join(downloads_dir, torrent_name), "wb") as file:
-                print("Downloading torrent...")
+                click.echo("Downloading torrent...")
                 response = requests.get(dload_url)
                 file.write(response.content)
                 self.logger.debug("Download complete!")
-                print("Download complete!")
-                print("\nSaved in %s\n" %(downloads_dir))
+                click.echo("Download complete!")
+                click.echo("\nSaved in %s\n" %(downloads_dir))
                 self.logger.debug("Saved in %s", (downloads_dir))
         except KeyboardInterrupt as e:
             self.logger.exception(e)
-            print("\nAborted!\n")
-
-    def colorify(self, color, text):
-        """To return colored text."""
-        colorama.init()
-        self.colors = {
-            "yellow": colorama.Fore.YELLOW + colorama.Style.BRIGHT,
-            "green": colorama.Fore.GREEN + colorama.Style.BRIGHT,
-            "magenta": colorama.Fore.MAGENTA + colorama.Style.BRIGHT,
-            "red": colorama.Fore.RED + colorama.Style.BRIGHT,
-            "reset": colorama.Style.RESET_ALL
-        }
-        text = self.colors[color] + text + self.colors["reset"]
-        return text
+            click.echo("\nAborted!\n")
 
     def show_output(self, masterlist, headers):
         """To display tabular output of torrent search."""
         try:
             self.output = tabulate(masterlist, headers=headers, tablefmt="grid")
-            print("\n%s" %(self.output))
+            click.echo("\n%s" %(self.output))
         except KeyboardInterrupt as e:
             self.logger.exception(e)
-            print("\nAborted!\n")
+            click.echo("\nAborted!\n")
 
     def copy_magnet(self, link):
         """Copy magnetic link to clipboard."""
-        from torrench.Torrench import Torrench
+        from torrench import Torrench
         tr = Torrench()
         if tr.check_copy():
             try:
                 pyperclip.copy(link)
-                print("(Magnetic link copied to clipboard)")
+                click.echo("(Magnetic link copied to clipboard)")
             except pyperclip.exceptions.PyperclipException as e:
-                print("(Unable to copy magnetic link to clipboard. Is [xclip] installed?)")
-                print("(See logs for details)")
+                click.echo("(Unable to copy magnetic link to clipboard. Is [xclip] installed?)")
+                click.echo("(See logs for details)")
                 self.logger.error(e)
 
     def load_torrent(self, link):
@@ -181,10 +169,10 @@ class Common:
                     self.logger.debug("torrench.ini file exists")
                     self.config.read(self.torrench_config_file)
                     client = self.config.get('Torrench-Config', 'CLIENT')
-                    print("\n(%s)" % (client))
+                    click.echo("\n(%s)" % (client))
                     self.logger.debug("using client: %s" %(client))
                 else:
-                    print("No config (torrench.ini) file found!")
+                    click.echo("No config (torrench.ini) file found!")
                     self.logger.debug("torrench.ini file not found!")
                     return
                 """
@@ -218,10 +206,10 @@ class Common:
                     e = p.communicate()  # `e` is a tuple.
                     error = e[1].decode('utf-8')
                     if error != '':
-                        print(self.colorify("red", "[ERROR] %s" % (error)))
+                        click.echo(click.style(error,fg='red'))
                         self.logger.error(error)
                     else:
-                        print(self.colorify("green", "Success (PID: %d)") %(p.pid))
+                        click.echo(click.style("Success (PID: %d)" %(p.pid),fg='green'))
                         self.logger.debug("torrent added! (PID: %d)" %(p.pid))
                 else:
                     """
@@ -230,7 +218,7 @@ class Common:
                     > Not tested, but should work: rtorrent, qbittorrent (please update me)
                     """
                     p = subprocess.Popen([client, link], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, preexec_fn=os.setpgrp)
-                    print(self.colorify("green", "Success (PID: %d)") %(p.pid))
+                    click.echo(click.style("Success (PID: %d)" %(p.pid),fg='green'))
                     self.logger.debug("torrent added! (PID: %d)" %(p.pid))
             else:
                 """
@@ -242,4 +230,4 @@ class Common:
                 webbrowser.open_new_tab(link)
         except Exception as e:
             self.logger.exception(e)
-            print(self.colorify("red",  "[ERROR]: %s") % (e))
+            click.echo(click.style("[ERROR]: %s" % (e),fg='red'))

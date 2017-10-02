@@ -5,8 +5,8 @@ import os
 import sys
 import logging
 import logging.config
-import torrench.Torrench as Torrench
-import torrench.utilities.logger as logger
+import torrench as Torrench
+import utilities.logger as logger
 
 logging.config.dictConfig(logger.LOG_SETTINGS)
 mylogger = logging.getLogger('log1')

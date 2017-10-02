@@ -2,7 +2,8 @@
 import sys
 import platform
 import logging
-from torrench.utilities.Config import Config
+from utilities.Config import Config
+import click
 
 
 class SkyTorrents(Config):
@@ -39,7 +40,7 @@ class SkyTorrents(Config):
         self.index = 0
         self.page = 0
         self.mylist = []
-        self.output_headers = ["NAME  ["+self.colorify("green", "+UPVOTES")+"/"+self.colorify("red", "-DOWNVOTES")+"]",
+        self.output_headers = ["NAME  ["+click.style("+UPVOTES", fg="green")+"/"+click.style("-DOWNVOTES", fg="red")+"]",
                                "INDEX", "SIZE", "FILES", "UPLOADED", "SEEDS", "LEECHES"]
         self.mapper = []
         self.soup = None
@@ -60,7 +61,7 @@ class SkyTorrents(Config):
         try:
             count = 0
             for proxy in self.proxies:
-                print("Trying %s" % (self.colorify("yellow", proxy)))
+                click.echo("Trying %s" % (click.style(proxy, fg="yellow")))
                 self.logger.debug("Trying proxy: %s" % (proxy))
                 """
                 Performing test for string hello.
@@ -68,36 +69,36 @@ class SkyTorrents(Config):
                 self.logger.debug("Carrying out test for string 'hello'")
                 self.soup = self.http_request(proxy + "/search/all/ed/1/?l=en-us&q=hello")
                 if self.soup.find_all('tr')[1] is None or self.soup is None or self.soup == -1:
-                    print("Bad proxy!")
+                    click.echo("Bad proxy!")
                     count += 1
                     if count == len(self.proxies):
                         self.logger.debug("Proxy list finished! Exiting!")
-                        print("No more proxies found! Exiting...")
+                        click.echo("No more proxies found! Exiting...")
                         sys.exit(2)
                 else:
                     self.logger.debug("Passed! Connected to proxy!")
-                    print("Available!")
+                    click.echo("Available!")
                     self.proxy = proxy
                     break
         except Exception as e:
-            print("Error message: %s" %(e))
-            print("Something went wrong! See logs for details. Exiting!")
+            click.echo("Error message: %s" %(e))
+            click.echo("Something went wrong! See logs for details. Exiting!")
             self.logger.exception(e)
             sys.exit(2)
 
     def get_top_html(self):
         """To get top 1000 torrents."""
-        print(self.colorify("green", "\n\n*Top 1000 SkyTorrents*"))
-        print("1000 Torrents are divided into 25 pages (1 page = 40 torrents)\n")
+        click.echo(click.style("\n\n*Top 1000 SkyTorrents*", fg="green"))
+        click.echo("1000 Torrents are divided into 25 pages (1 page = 40 torrents)\n")
         try:
-            option = int(input("Enter number of pages (0<n<=25): "))
+            option = click.prompt("Enter number of pages (0<n<=25): ", type=int)
             if option <= 0 or option >= 25:
-                print("Bad input! Exiting!")
+                click.echo("Bad input! Exiting!")
                 sys.exit(2)
             else:
                 self.pages = option
         except ValueError as e:
-            print("Bad input! Exiting!")
+            click.echo("Bad input! Exiting!")
             self.logger.exception(e)
             sys.exit(2)
 
@@ -117,7 +118,7 @@ class SkyTorrents(Config):
         """
         try:
             for self.page in range(self.pages):
-                print("\nFetching from page: %d" % (self.page+1))
+                click.echo("\nFetching from page: %d" % (self.page+1))
                 self.logger.debug("fetching page %d/%d" % (self.page+1, self.pages))
                 """
                 If title is none, get TOP torrents.
@@ -127,13 +128,13 @@ class SkyTorrents(Config):
                 else:
                     search = "/search/all/ed/%d/?l=en-us&q=%s" % (self.page+1, self.title)
                 self.soup, time = self.http_request_time(self.proxy + search)
-                print("[in %.2f sec]" % (time))
+                click.echo("[in %.2f sec]" % (time))
                 self.logger.debug("page fetched in %.2f sec!" % (time))
                 self.total_fetch_time += time
                 self.soup_dict[self.page] = self.soup
         except Exception as e:
-            print("Error message: %s" %(e))
-            print("Something went wrong! See logs for details. Exiting!")
+            click.echo("Error message: %s" %(e))
+            click.echo("Something went wrong! See logs for details. Exiting!")
             self.logger.exception(e)
             sys.exit(2)
 
@@ -170,8 +171,8 @@ class SkyTorrents(Config):
                     except IndexError as e:
                         self.logger.exception(e)
                         pass
-                    upvotes = self.colorify("green", ("+"+upvotes))
-                    downvotes = self.colorify("red", ("-"+downvotes))
+                    upvotes = click.style(("+"+upvotes), fg="green")
+                    downvotes = click.style(("-"+downvotes), fg="red")
                     display_votes = "  [%s]" % (upvotes+"/"+downvotes)
                     link = results[0].find_all('a')[0]['href']
                     magnet = results[0].find_all('a')[1]['href']
@@ -188,14 +189,14 @@ class SkyTorrents(Config):
                     masterlist.append(self.mylist)
 
             if masterlist == []:
-                print("No results found for given input!")
+                click.echo("No results found for given input!")
                 self.logger.debug("No results found for given input! Exiting!")
                 sys.exit(2)
             self.logger.debug("Results fetched successfully!")
             self.show_output(masterlist, self.output_headers)
         except Exception as e:
-            print("Error message: %s" %(e))
-            print("Something went wrong! See logs for details. Exiting!")
+            click.echo("Error message: %s" %(e))
+            click.echo("Something went wrong! See logs for details. Exiting!")
             self.logger.exception(e)
             sys.exit(2)
 
@@ -211,15 +212,15 @@ class SkyTorrents(Config):
             has_extra_pages = self.index % 40
             if has_extra_pages > 0:
                 exact_no_of_pages += 1
-            print("\nTotal %d torrents [%d pages]" % (self.index, exact_no_of_pages))
-            print("Total time: %.2f sec" % (self.total_fetch_time))
+            click.echo("\nTotal %d torrents [%d pages]" % (self.index, exact_no_of_pages))
+            click.echo("Total time: %.2f sec" % (self.total_fetch_time))
             self.logger.debug("fetched ALL results in %.2f sec" % (self.total_fetch_time))
-            print("\nFurther, torrent can be downloaded using magnetic link\nOR\nTorrent's upstream link can be obtained to be opened in web browser.")
-            print("\nEnter torrent's index value to fetch details (Maximum one index)\n")
+            click.echo("\nFurther, torrent can be downloaded using magnetic link\nOR\nTorrent's upstream link can be obtained to be opened in web browser.")
+            click.echo("\nEnter torrent's index value to fetch details (Maximum one index)\n")
         except Exception as e:
             self.logger.exception(e)
-            print("Error message: %s" %(e))
-            print("Something went wrong! See logs for details. Exiting!")
+            click.echo("Error message: %s" %(e))
+            click.echo("Something went wrong! See logs for details. Exiting!")
             sys.exit(2)
 
     def select_torrent(self):
@@ -236,40 +237,38 @@ class SkyTorrents(Config):
         temp = 9999
         while(temp != 0):
             try:
-                temp = int(input("\n(0=exit)\nindex > "))
+                temp = click.prompt("\n(0=exit)\nindex > ", type=int)
                 self.logger.debug("selected index %d" % (temp))
                 if temp == 0:
-                    print("\nBye!")
+                    click.echo("\nBye!")
                     self.logger.debug("Torrench quit!")
                     sys.exit(2)
                 elif temp < 0:
-                    print("\nBad Input!")
+                    click.echo("\nBad Input!")
                     continue
                 else:
                     selected_torrent, req_magnetic_link, torrent_link, self.file_count = self.mapper[temp-1]
-                    selected_torrent = self.colorify("yellow", selected_torrent)
-                    print("\nSelected index [%d] - %s\n" % (temp, selected_torrent))
+                    selected_torrent = click.style(selected_torrent, fg="yellow")
+                    click.echo("\nSelected index [%d] - %s\n" % (temp, selected_torrent))
                     self.logger.debug("selected torrent: %s ; index: %d" % (selected_torrent, temp))
 
                     # Show torrent files?
-                    option = input("Show torrent files? [y/n]: ")
-                    self.logger.debug("View torrent files: [%s]" % (option))
-                    if (option == 'y' or option == 'Y'):
+                    if click.confirm("Show torrent files? : "):
                         self.show_files(torrent_link)
                         self.logger.debug("Torrent files displayed.")
-                    elif (option == 'n' or option == 'N' or option == ""):
+                    else:
                         self.logger.debug("Torrent files NOT displayed.")
 
                     # Print Magnetic link / load magnet to client
-                    temp2 = input("\n1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
+                    temp2 = click.prompt("\n1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ", type=str)
                     temp2 = temp2.lower()
                     self.logger.debug("selected option: [%c]" % (temp2))
                     if temp2 == 'p':
                         self.logger.debug("printing magnetic link and upstream link")
-                        print("\nMagnet link: {magnet}".format(magnet=self.colorify("red", req_magnetic_link)))
+                        click.echo("\nMagnet link: {magnet}".format(magnet=click.style(req_magnetic_link, fg="red")))
                         self.copy_magnet(req_magnetic_link)
-                        upstream_link = self.colorify("yellow", self.proxy + torrent_link)
-                        print("\n\nUpstream link: {url}\n".format(url=upstream_link))
+                        upstream_link = click.style(self.proxy + torrent_link, fg="yellow")
+                        click.echo("\n\nUpstream link: {url}\n".format(url=upstream_link))
                     elif temp2 == 'l':
                         try:
                             self.logger.debug("Loading torrent to client")
@@ -278,7 +277,7 @@ class SkyTorrents(Config):
                             self.logger.exception(e)
                             continue
             except (ValueError, IndexError, TypeError) as e:
-                print("\nBad Input!")
+                click.echo("\nBad Input!")
                 self.logger.exception(e)
                 continue
 
@@ -288,19 +287,19 @@ class SkyTorrents(Config):
         self.logger.debug("Torrent has %d files" %(int(self.file_count)))
         if int(self.file_count) > 0:
             soup = self.http_request(self.proxy + torrent_link)
-            print("\nTotal %d files" % (int(self.file_count)))
+            click.echo("\nTotal %d files" % (int(self.file_count)))
             for i in range(int(self.file_count)):
                 name = soup.find_all("tr")[i+1].find_all('td')[0].string
                 size = soup.find_all("tr")[i+1].find_all('td')[1].string
-                print("> %s  (%s)" % (name, self.colorify("green", size)))
+                click.echo("> %s  (%s)" % (name, click.style(size, "green")))
         self.logger.debug("Files fetched!")
 
 
 def main(title, page_limit):
     """Execution begins here."""
     try:
-        print("\n[SkyTorrents]\n")
-        print("Obtaining proxies...")
+        click.echo("\n[SkyTorrents]\n")
+        click.echo("Obtaining proxies...")
         sky = SkyTorrents(title, page_limit)
         sky.check_proxy()
         if title is None:
@@ -311,7 +310,7 @@ def main(title, page_limit):
         sky.select_torrent()
     except KeyboardInterrupt:
         sky.logger.debug("Keyboard interupt! Exiting!")
-        print("\n\nAborted!")
+        click.echo("\n\nAborted!")
 
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ import os
 import time
 import platform
 import io
+import click
 
 home = os.path.expanduser(os.path.join('~', '.torrench'))
 temp_dir = os.path.expanduser(os.path.join(home, 'temp'))
@@ -51,40 +52,40 @@ def get_details(url, index):
     total_time = 0
     if total_comments_pages is not None:
         total_comments_pages = int(soup.find('div', class_='browse-coms').strong.string)
-        print("\n%d comment pages (1 page = 25 comments (MAX))" % (total_comments_pages))
+        click.echo("\n%d comment pages (1 page = 25 comments (MAX))" % (total_comments_pages))
         temp = True
         pg_count = 0
         if(total_comments_pages > 2):  # If more than 3 comment pages are present, ask user what to do.
             while(temp):
-                opt = input("Fetch all pages? May take longer [y/n/display anyway[d]]: ")
+                opt = click.prompt("Fetch all pages? May take longer [y/n/display anyway[d]]: ", type=str)
                 if opt == 'y' or opt == 'Y':
                     pg_count = 0
                     temp = False
                 elif opt == 'n' or opt == 'N':
-                    pg_inp = input("Number of pages to fetch comments from? [0 < n < %d]: " % (total_comments_pages));
+                    pg_inp = click.prompt("Number of pages to fetch comments from? [0 < n < %d]: " % (total_comments_pages), type=int);
                     if pg_inp == '':
-                        print("Bad Input")
+                        click.echo("Bad Input")
                     else:
                         pg_inp = int(pg_inp)
                         if pg_inp < total_comments_pages and pg_inp > 0:
                             pg_count = total_comments_pages - pg_inp
                             temp = False
                         else:
-                            print("Bad Input")
+                            click.echo("Bad Input")
                 elif opt == 'd' or opt == 'D':
                     pg_count = total_comments_pages
                     temp = False
                 else:
-                    print("Bad Input")
+                    click.echo("Bad Input")
 
-        print("\nLast page (%d) [Already fetched]" % (total_comments_pages))
+        click.echo("\nLast page (%d) [Already fetched]" % (total_comments_pages))
         total_comments_pages -= 1  # Since last page is already fetched. So start from (n-1)th page
 
         while(total_comments_pages > pg_count):
             start_time = time.time()
             raw = requests.get(url, params={'page': total_comments_pages})
             end_time = time.time() - start_time
-            print("Page " + str(total_comments_pages) + " [%.2f sec]" % (end_time))
+            click.echo("Page " + str(total_comments_pages) + " [%.2f sec]" % (end_time))
             raw = raw.content
             soup2 = BeautifulSoup(raw, "lxml")
             comments = soup2.find_all('div', class_='comment')
@@ -179,9 +180,9 @@ def get_details(url, index):
 
     file_url = "file://" + html_file
     if opt == 'd' or opt == 'D' or opt == '':
-        print("\n[in %.2f sec]" % (initial_end_time))
+        click.echo("\n[in %.2f sec]" % (initial_end_time))
     else:
-        print("\n[in %.2f sec]" % (total_time))
+        click.echo("\n[in %.2f sec]" % (total_time))
     return file_url
 
 

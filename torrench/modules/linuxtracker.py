@@ -2,7 +2,8 @@
 
 import sys
 import logging
-from torrench.utilities.Common import Common
+from utilities.Common import Common
+import click
 
 
 class LinuxTracker(Common):
@@ -48,7 +49,7 @@ class LinuxTracker(Common):
             code = int(categories[i]['value'])
             # Map name with count (index) and code
             self.category_mapper.insert(count, (name, code))
-            print("[%d] %s" % (count, name))
+            click.echo("[%d] %s" % (count, name))
             count += 1
         self.logger.debug("Total %d categories displayed" % (count))
 
@@ -62,24 +63,24 @@ class LinuxTracker(Common):
         """
         self.logger.debug("Select category")
         try:
-            temp = int(input("\nSelect category (0=none) : "))
+            temp = click.prompt("\nSelect category (0=none) : ", type=int)
             self.logger.debug("selected index: %d" % (temp))
             if temp == 0:
                 self.categ_url_code = 0
-                print("category: none\n")
+                click.echo("category: none\n")
             else:
                 selected_category, self.categ_url_code = self.category_mapper[temp]
-                print("Selected [%d] : %s " % (temp, selected_category))
+                click.echo("Selected [%d] : %s " % (temp, selected_category))
                 self.logger.debug("Selected category %s ; index: %d" % (selected_category, temp))
                 self.logger.debug("category_url_code: %d" % (self.categ_url_code))
         except (ValueError, KeyError, IndexError) as e:
             self.logger.exception(e)
-            print("\nBad Input!")
+            click.echo("\nBad Input!")
             sys.exit(2)
 
     def fetch_results(self):
         """To fetch results for given input."""
-        print("Fetching results...")
+        click.echo("Fetching results...")
         self.logger.debug("Fetching...")
         masterlist = []
         self.logger.debug("categ_url_code = %d ; url=%s" % (self.categ_url_code, self.url))
@@ -104,7 +105,7 @@ class LinuxTracker(Common):
                 self.logger.exception(e)
                 pass
         if self.index == 0:
-            print("No results found for give input!")
+            click.echo("No results found for give input!")
             self.logger.debug("\nNo results found for given input! Exiting!")
             sys.exit(2)
         self.logger.debug("Results fetched successfully!")
@@ -117,27 +118,27 @@ class LinuxTracker(Common):
         Each torrent is associated to an index value.
         Torrent is selected through that index.
         """
-        print("\nTorrent can be downloaded directly through index.")
+        click.echo("\nTorrent can be downloaded directly through index.")
         self.logger.debug("Selecting torrent...")
         temp = 9999
         while(temp != 0):
             try:
-                temp = int(input("\n(0 = exit)\nindex > "))
+                temp = click.prompt("\n(0 = exit)\nindex > ", type=int)
                 self.logger.debug("selected index %d" % (temp))
                 if temp == 0:
-                    print("\nBye!")
+                    click.echo("\nBye!")
                     self.logger.debug("Torrench quit!")
                     break
                 elif temp < 0:
-                    print("\nBad Input\n")
+                    click.echo("\nBad Input\n")
                     continue
                 else:
                     selected_index, dload = self.mapper[temp-1]
                     self.logger.debug("selected torrent: %s ; index: %d" % (selected_index, temp))
-                    print("\nSelected index[%s] - %s" % (temp, self.colorify("yellow", selected_index)))
+                    click.echo("\nSelected index[%s] - %s" % (temp, click.style(selected_index, fg="yellow")))
                     self.get_torrent("http://linuxtracker.org/"+dload)
             except (ValueError, IndexError, KeyError) as e:
-                print("\nBad Input\n")
+                click.echo("\nBad Input\n")
                 self.logger.exception(e)
 
     def get_torrent(self, url):
@@ -157,17 +158,16 @@ class LinuxTracker(Common):
             self.download(dload_url, torrent_name)
         except Exception as e:
             self.logger.exception(e)
-            print("Error message: %s" %(e))
-            print("Something went wrong! See logs for details. Exiting!")
+            click.echo("Error message: %s" %(e))
+            click.echo("Something went wrong! See logs for details. Exiting!")
             sys.exit(2)
 
 def main(title):
     """Execution begins here."""
     try:
-        print("\n[LinuxTracker]\n")
+        click.echo("\n[LinuxTracker]\n")
         ltr = LinuxTracker(title)
-        temp = input("Display categories? [y/n]: ")
-        if temp == 'y' or temp == 'Y':
+        if click.confirm("Display categories? : ")
             ltr.logger.debug("Display categories: %c" % (temp))
             ltr.display_categories()
             ltr.select_category()
@@ -179,7 +179,7 @@ def main(title):
         ltr.select_torrent()
     except KeyboardInterrupt:
         ltr.logger.debug("Keyboard interupt! Exiting!")
-        print("\n\nAborted!")
+        click.echo("\n\nAborted!")
 
 
 if __name__ == "__main__":

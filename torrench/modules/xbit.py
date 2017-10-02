@@ -5,7 +5,8 @@ import logging
 import sys
 import time
 import platform
-from torrench.utilities.Config import Config
+from utilities.Config import Config
+import click
 
 
 class XBit(Config):
@@ -66,7 +67,7 @@ class XBit(Config):
             masterlist = []
             results = self.data['dht_results']
             if results == [{}]:
-                print("\nNo results found for given input!\n")
+                click.echo("\nNo results found for given input!\n")
                 self.logger.debug("No results fetched!")
                 sys.exit(2)
             for result in results[:-1]:
@@ -85,8 +86,8 @@ class XBit(Config):
             self.show_output(masterlist, self.output_headers)
         except Exception as e:
             self.logger.exception(e)
-            print("Error message: %s" % (e))
-            print("Something went wrong! See logs for details. Exiting!")
+            click.echo("Error message: %s" % (e))
+            click.echo("Something went wrong! See logs for details. Exiting!")
             sys.exit(2)
 
     def after_output_text(self):
@@ -94,14 +95,14 @@ class XBit(Config):
         Text to be displayed after results are displayed.
         """
         try:
-            print("\nTotal %d torrents" % (self.index))
-            print("Total time: %.2f sec" % (self.total_fetch_time))
+            click.echo("\nTotal %d torrents" % (self.index))
+            click.echo("Total time: %.2f sec" % (self.total_fetch_time))
             self.logger.debug("fetched ALL results in %.2f sec" % (self.total_fetch_time))
-            print("\nEnter torrent's index value (Maximum one index)\n")
+            click.echo("\nEnter torrent's index value (Maximum one index)\n")
         except Exception as e:
             self.logger.exception(e)
-            print("Error message: %s" %(e))
-            print("Something went wrong! See logs for details. Exiting!")
+            click.echo("Error message: %s" %(e))
+            click.echo("Something went wrong! See logs for details. Exiting!")
             sys.exit(2)
 
     def select_torrent(self):
@@ -118,25 +119,25 @@ class XBit(Config):
         temp = 9999
         while(temp != 0):
             try:
-                temp = int(input("\n\n(0=exit)\nindex > "))
+                temp = click.prompt("\n\n(0=exit)\nindex > ", type=int)
                 self.logger.debug("selected index %d" % (temp))
                 if temp == 0:
-                    print("\nBye!")
+                    click.echo("\nBye!")
                     self.logger.debug("Torrench quit!")
                     sys.exit(2)
                 elif temp < 0:
-                    print("\nBad Input!")
+                    click.echo("\nBad Input!")
                     continue
                 else:
                     selected_torrent, req_magnetic_link, torrent_id = self.mapper[temp-1]
-                    print("Selected index [%d] - %s\n" % (temp, self.colorify("yellow", selected_torrent)))
+                    click.echo("Selected index [%d] - %s\n" % (temp, click.style(selected_torrent, fg="yellow")))
                     self.logger.debug("selected torrent: %s ; index: %d" % (selected_torrent, temp))
-                    temp2 = input("1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
+                    temp2 = click.prompt("1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ", type=str)
                     temp2 = temp2.lower()
                     self.logger.debug("selected option: [%c]" % (temp2))
                     if temp2 == 'p':
                         self.logger.debug("printing magnetic link and upstream link")
-                        print("\nMagnetic link - %s" % (self.colorify("red",  req_magnetic_link)))
+                        click.echo("\nMagnetic link - %s" % (click.style(req_magnetic_link, fg="red")))
                         self.copy_magnet(req_magnetic_link)
                     elif temp2 == 'l':
                         try:
@@ -146,7 +147,7 @@ class XBit(Config):
                             self.logger.exception(e)
                             continue
             except (ValueError, IndexError, TypeError) as e:
-                print("\nBad Input!")
+                click.echo("\nBad Input!")
                 self.logger.exception(e)
                 continue
 
@@ -154,17 +155,17 @@ class XBit(Config):
 def main(title):
     """Execution begins here."""
     try:
-        print("\n[XBit.pw]\n")
+        click.echo("\n[XBit.pw]\n")
         xb = XBit(title)
-        print("Using %s" %(xb.colorify("yellow", xb.proxy)))
-        print("Fetching results...")
+        click.echo("Using %s" %(click.style(xb.proxy, fg="yellow")))
+        click.echo("Fetching results...")
         xb.get_data()
         xb.parse_data()
         xb.after_output_text()
         xb.select_torrent()
     except KeyboardInterrupt:
         xb.logger.debug("Keyboard interupt! Exiting!")
-        print("\n\nAborted!")
+        click.echo("\n\nAborted!")
 
 
 if __name__ == "__main__":

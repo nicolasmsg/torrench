@@ -3,7 +3,8 @@
 import sys
 import platform
 import logging
-from torrench.utilities.Config import Config
+from utilities.Config import Config
+import click
 
 
 class KickassTorrents(Config):
@@ -60,19 +61,19 @@ class KickassTorrents(Config):
         """
         count = 0
         for proxy in self.proxies:
-            print("Trying %s" % (self.colorify("yellow", proxy)))
+            click.echo(click.style('Trying %s' % proxy ,fg="yellow"))
             self.logger.debug("Trying proxy: %s" % (proxy))
             self.soup = self.http_request(proxy)
             if self.soup.find('a')['href'] != proxy + "full/" or self.soup == -1:
-                print("Bad proxy!")
+                click.echo("Bad proxy!")
                 count += 1
                 if count == len(self.proxies):
                     self.logger.debug("Proxy list finished! Exiting!")
-                    print("No more proxies found! Exiting...")
+                    click.echo("No more proxies found! Exiting...")
                     sys.exit(2)
             else:
                 self.logger.debug("Connected to proxy...")
-                print("Available!\n")
+                click.echo("Available!\n")
                 self.proxy = proxy
                 break
 
@@ -86,11 +87,11 @@ class KickassTorrents(Config):
         Uses http_request_time() from Common.py module.
         """
         for self.page in range(self.pages):
-            print("\nFetching from page: %d" % (self.page+1))
+            click.echo("\nFetching from page: %d" % (self.page+1))
             self.logger.debug("fetching page %d/%d" % (self.page, self.pages))
             search = "usearch/%s/%d/" % (self.title, self.page + 1)
             self.soup, time = self.http_request_time(self.proxy + search)
-            print("Page fetched!")
+            click.echo("Page fetched!")
             self.logger.debug("Page fetched in %.2f sec!" % (time))
             self.total_fetch_time += time
             self.soup_dict[self.page] = self.soup
@@ -125,15 +126,15 @@ class KickassTorrents(Config):
                     category = i.find('span', class_='lightgrey').get_text().split(" ")[-2]
                     verified_uploader = i.find('a', {'title': 'Verified Torrent'})
                     if verified_uploader is not None:
-                        uploader_name = self.colorify("yellow", uploader_name)
+                        uploader_name = click.style(uploader_name ,fg="yellow")
                         comment_count = i.find('a', class_='icommentjs').get_text()
                     if comment_count == '':
                         comment_count = 0
                     misc_details = i.find_all('td', class_='center')
                     size = misc_details[0].string
                     date_added = misc_details[1].string
-                    seeds = self.colorify("green", misc_details[2].string)
-                    leeches = self.colorify("red", misc_details[3].string)
+                    seeds = click.style(misc_details[2].string ,fg="green")
+                    leeches = click.style(misc_details[3].string ,fg="red")
                     magnet = i.find('a', {'title': 'Torrent magnet link'})['href']
                     self.index += 1
                     self.mapper.insert(self.index, (name, magnet, torrent_link))
@@ -142,15 +143,15 @@ class KickassTorrents(Config):
                     masterlist.append(self.mylist)
 
             if masterlist == []:
-                print("\nNo results found for given input!\n")
+                click.echo("\nNo results found for given input!\n")
                 self.logger.debug("\nNo results found for given input! Exiting!")
                 sys.exit(2)
             self.logger.debug("Results fetched successfully!")
             self.show_output(masterlist, self.output_headers)
         except Exception as e:
             self.logger.exception(e)
-            print("Error message: %s" %(e))
-            print("Something went wrong! See logs for details. Exiting!")
+            click.echo("Error message: %s" %(e))
+            click.echo("Something went wrong! See logs for details. Exiting!")
             sys.exit(2)
 
 
@@ -166,15 +167,15 @@ class KickassTorrents(Config):
             has_extra_pages = self.index % 30
             if has_extra_pages > 0:
                 exact_no_of_pages += 1
-            print("\nTotal %d torrents [%d pages]" % (self.index, exact_no_of_pages))
-            print("Total time: %.2f sec" % (self.total_fetch_time))
+            click.echo("\nTotal %d torrents [%d pages]" % (self.index, exact_no_of_pages))
+            click.echo("Total time: %.2f sec" % (self.total_fetch_time))
             self.logger.debug("fetched ALL results in %.2f sec" % (self.total_fetch_time))
-            print("\nFurther, torrent can be downloaded using magnetic link\nOR\nTorrent's upstream link can be obtained to be opened in web browser.")
-            print("\nEnter torrent's index value (Maximum one index)")
+            click.echo("\nFurther, torrent can be downloaded using magnetic link\nOR\nTorrent's upstream link can be obtained to be opened in web browser.")
+            click.echo("\nEnter torrent's index value (Maximum one index)")
         except Exception as e:
             self.logger.exception(e)
-            print("Error message: %s" %(e))
-            print("Something went wrong! See logs for details. Exiting!")
+            click.echo("Error message: %s" %(e))
+            click.echo("Something went wrong! See logs for details. Exiting!")
             sys.exit(2)
 
     def select_torrent(self):
@@ -190,30 +191,31 @@ class KickassTorrents(Config):
         temp = 9999
         while(temp != 0):
             try:
-                temp = int(input("\n(0=exit)\nindex > "))
+                temp = click.prompt("\n(0=exit)\nindex > ", type=int)
                 self.logger.debug("selected index: %d" % (temp))
                 if temp == 0:
                     self.logger.debug("Torrench quit!")
-                    print("\nBye!\n")
+                    click.echo("\nBye!\n")
                     break
                 elif temp < 0:
-                    print("\nBad Input!")
+                    click.echo("\nBad Input!")
                     continue
                 else:
                     selected_torrent, req_magnetic_link, req_torr_link = self.mapper[temp-1]
-                    selected_torrent = self.colorify("yellow", selected_torrent)
-                    print("Selected index [%d] - %s\n" % (temp, selected_torrent))
+                    selected_torrent = click.style(selected_torrent ,fg="yellow")
+                    click.echo("Selected index [%d] - %s\n" % (temp, selected_torrent))
                     self.logger.debug("selected torrent: %s ; index: %d" % (selected_torrent, temp))
                     # Print Magnetic link / load magnet to client
-                    temp2 = input("\n1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
+                    temp2 = click.prompt("\n1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ", type=str)
                     temp2 = temp2.lower()
                     self.logger.debug("selected option: [%c]" % (temp2))
                     if temp2 == 'p':
                         self.logger.debug("printing magnetic link and upstream link")
-                        print("\nMagnet link: {magnet}".format(magnet=self.colorify("red", req_magnetic_link)))
+                        click.echo("\nMagnet link: {magnet}".format(magnet=click.style(req_magnetic_link ,fg="red")))
                         self.copy_magnet(req_magnetic_link)
-                        upstream_link = self.colorify("yellow", self.proxy + req_torr_link)
-                        print("\n\nUpstream Link: %s \n\n" % (upstream_link))
+                        
+                        upstream_link = click.style(self.proxy + req_torr_link ,fg="yellow")
+                        click.echo("\n\nUpstream Link: %s \n\n" % (upstream_link))
                     elif temp2 == 'l':
                         try:
                             self.logger.debug("Loading torrent to client")
@@ -222,7 +224,7 @@ class KickassTorrents(Config):
                             self.logger.exception(e)
                             continue
             except (ValueError, IndexError, TypeError) as e:
-                print("\nBad Input!")
+                click.echo("\nBad Input!")
                 self.logger.exception(e)
                 continue
 
@@ -230,8 +232,8 @@ class KickassTorrents(Config):
 def main(title, page_limit):
     """Execution begins here."""
     try:
-        print("\n[KickassTorrents]\n")
-        print("Obtaining proxies...")
+        click.echo("\n[KickassTorrents]\n")
+        click.echo("Obtaining proxies...")
         kat = KickassTorrents(title, page_limit)
         kat.check_proxy()
         kat.get_html()
@@ -240,7 +242,7 @@ def main(title, page_limit):
         kat.select_torrent()
     except KeyboardInterrupt:
         kat.logger.debug("Keyboard interupt! Exiting!")
-        print("\n\nAborted!")
+        click.echo("\n\nAborted!")
 
 
 if __name__ == "__main__":

@@ -4,108 +4,27 @@ import os
 import sys
 import argparse
 import logging
-from torrench.utilities.Config import Config
+import click
+from utilities.Config import Config
 
+
+logger = logging.getLogger('log1')
+
+__version__ = '1.0.54'
+
+# v_print = None
 
 class Torrench(Config):
-    """
-    Torrench class.
-
-    This class resolves input arguments.
-    Following arguments are present -
-
-    positional arguments:
-      search                Enter search string
-
-    optional arguments:
-      -h, --help            show this help message and exit
-      -d, --distrowatch     Search distrowatch
-      -t, --thepiratebay    Search thepiratebay (TPB)
-      -k, --kickasstorrent  Search KickassTorrent (KAT)
-      -s, --skytorrents     Search SkyTorrents
-      -n, --nyaa            Search Nyaa
-      -x, --xbit            Search XBit.pw
-      --top                 Get top torrents [TPB/SkyTorrents]
-      --copy                Copy magnetic link to clipboard
-      -p LIMIT, --page-limit LIMIT
-                            Number of pages to fetch results from (1 page = 30 results).
-                            [default: 1] [TPB/KAT/SkyTorrents]
-      -c, --clear-html      Clear all [TPB] torrent description HTML files and exit.
-      -v, --version         Display version and exit.
-    """
 
     def __init__(self):
         """Initialisations."""
         Config.__init__(self)
         self.__version__ = "Torrench (1.0.54)"
         self.logger = logging.getLogger('log1')
-        self.args = None
+        self.args = None # Should probable be deleted
+        self.copy = False
         self.input_title = None
         self.page_limit = 0
-
-    def define_args(self):
-        """All input arguments are defined here."""
-        self.logger.debug("command-input: %s" % (sys.argv))
-        parser = argparse.ArgumentParser(description="Command-line torrent search tool.")
-        parser.add_argument("-d",
-                            "--distrowatch",
-                            action="store_true",
-                            help="Search distrowatch")
-        parser.add_argument("-t",
-                            "--thepiratebay",
-                            action="store_true",
-                            help="Search thepiratebay (TPB)")
-        parser.add_argument("-k",
-                            "--kickasstorrent",
-                            action="store_true",
-                            help="Search KickassTorrent (KAT)")
-        parser.add_argument("search",
-                            help="Enter search string",
-                            nargs="?",
-                            default=None)
-        parser.add_argument("-s",
-                            "--skytorrents",
-                            action="store_true",
-                            help="Search SkyTorrents")
-        parser.add_argument("-n",
-                            "--nyaa",
-                            action="store_true",
-                            help="Search Nyaa")
-        parser.add_argument("-x",
-                            "--xbit",
-                            action="store_true",
-                            help="Search XBit.pw")
-        parser.add_argument("--top",
-                            action="store_true",
-                            default=False,
-                            help="Get top torrents")
-        parser.add_argument("--copy",
-                            action="store_true",
-                            default=False,
-                            help="Copy magnetic link to clipboard")
-        parser.add_argument("-p",
-                            "--page-limit",
-                            type=int,
-                            help="Number of pages to fetch results from (1 page = 30 results).\n [default: 1]",
-                            default=1,
-                            dest="limit")
-        parser.add_argument("-c",
-                            "--clear-html",
-                            action="store_true",
-                            default=False,
-                            help="Clear all [TPB] torrent description HTML files and exit.")
-        parser.add_argument("-v",
-                            "--version",
-                            action='version',
-                            version=self.__version__,
-                            help="Display version and exit.")
-        self.args = parser.parse_args()
-
-    def check_copy(self):
-        """Check if --copy argument is present."""
-        self.define_args()
-        if self.args.copy:
-            return True
 
     def remove_temp_files(self):
         """
@@ -121,120 +40,134 @@ class Torrench(Config):
         temp_dir = os.path.join(home, "temp")
         self.logger.debug("temp directory default location: %s" % (temp_dir))
         if not os.path.exists(temp_dir):
-            print("Directory not initialised. Exiting!")
+            click.echo("Directory not initialised. Exiting!")
             self.logger.debug("directory not found")
             sys.exit(2)
         files = os.listdir(temp_dir)
         if not files:
-            print("Directory empty. Nothing to remove")
+            click.echo("Directory empty. Nothing to remove")
             self.logger.debug("Directory empty!")
             sys.exit(2)
         else:
             for count, file_name in enumerate(files, 1):
                 os.remove(os.path.join(temp_dir, file_name))
-            print("Removed {} file(s).".format(count))
+            click.echo("Removed {} file(s).".format(count))
             self.logger.debug("Removed {} file(s).".format(count))
-            sys.exit(2)
+            sys.exit(2)    
+
+    def check_copy(self):
+        """Check if --copy argument is present."""
+        if self.copy:
+            return True
 
     def verify_input(self):
         """To verify if input given is valid or not."""
         if self.input_title is None:
             self.logger.debug("Bad input! Input string expected! Got 'None'")
-            print("\nInput string expected.\nUse --help for more\n")
+            click.echo("\nInput string expected.\nUse --help for more\n")
             sys.exit(2)
 
         if self.page_limit <= 0 or self.page_limit > 50:
             self.logger.debug("Invalid page_limit entered: %d" % (tr.page_limit))
-            print("Enter valid page input [0<p<=50]")
+            click.echo("Enter valid page input [0<p<=50]")
             sys.exit(2)
 
-    def resolve_args(self):
-        """Resolve input arguments."""
-        _PRIVATE_MODULES = (
-            self.args.thepiratebay,
-            self.args.kickasstorrent,
-            self.args.skytorrents,
-            self.args.nyaa,
-            self.args.xbit
-        ) # These modules are only enabled through manual configuration.
-        if self.args.clear_html:
-            if not self.args.thepiratebay:
-                print("error: use -c with -t")
-                sys.exit(2)
-            else:
-                self.remove_temp_files()
-        if any(_PRIVATE_MODULES):
-            if not self.file_exists():
-                print("\nConfig file not configured. Configure to continue. Read docs for more info.\n")
-                print("Config file either does not exist or is not enabled! Exiting!")
-                sys.exit(2)
-            else:
-                if self.args.thepiratebay:
-                    self.logger.debug("using thepiratebay")
-                    if self.args.top:
-                        self.logger.debug("selected TPB TOP-torrents")
-                        self.input_title = None
-                        self.page_limit = None
-                    self.logger.debug("Input title: [%s] ; page_limit: [%s]" % (self.input_title, self.page_limit))
-                    import torrench.modules.thepiratebay as tpb
-                    tpb.main(self.input_title, self.page_limit)
-                elif self.args.kickasstorrent:
-                    self.logger.debug("Using kickasstorrents")
-                    self.logger.debug("Input title: [%s] ; page_limit: [%s]" % (self.input_title, self.page_limit))
-                    import torrench.modules.kickasstorrent as kat
-                    kat.main(self.input_title, self.page_limit)
-                elif self.args.skytorrents:
-                    self.logger.debug("Using skytorrents")
-                    if self.args.top:
-                        self.logger.debug("selected SkyTorrents TOP-torrents")
-                        self.input_title = None
-                        self.page_limit = None
-                    self.logger.debug("Input title: [%s] ; page_limit: [%s]" % (self.input_title, self.page_limit))
-                    import torrench.modules.skytorrents as sky
-                    sky.main(self.input_title, self.page_limit)
-                elif self.args.nyaa:
-                    self.logger.debug("Using Nyaa.si")
-                    import torrench.modules.nyaa as nyaa
-                    nyaa.main(self.input_title)
-                elif self.args.xbit:
-                    self.logger.debug("Using XBit.pw")
-                    self.logger.debug("Input title: [%s]" % (self.input_title))
-                    import torrench.modules.xbit as xbit
-                    xbit.main(self.input_title)
-        elif self.args.distrowatch:
-            self.logger.debug("Using distrowatch")
-            self.logger.debug("Input title: [%s]" % (self.input_title))
-            import torrench.modules.distrowatch as distrowatch
-            distrowatch.main(self.input_title)
+torrench = Torrench()
+
+
+@click.command()
+@click.option('-d', '--distrowatch', is_flag=True, help='Search distrowatch')
+@click.option('-t', '--thepiratebay', is_flag=True, help='Search thepiratebay (TPB)')
+@click.option('-k', '--kickasstorrent', is_flag=True, help='Search KickassTorrent (KAT)')
+@click.option('-s','--skytorrents', is_flag=True, help='Search SkyTorrents')
+@click.option('-n', '--nyaa', is_flag=True, help='Search Nyaa')
+@click.option('-x', '--xbit', is_flag=True, help='Search XBit.pw')
+@click.option('--top', is_flag=True, help='Get top torrents [TPB/SkyTorrents]')
+@click.option('--copy', is_flag=True, help='Copy magnetic link to clipboard')
+@click.option('-p', '--page-limit', default=1, help='LIMIT Number of pages to fetch results from (1 page = 30 results). [default: 1] [TPB/KAT/SkyTorrents]')
+@click.option('-c', '--clear-html', is_flag=True, help='Clear all [TPB] torrent description HTML files and exit.')
+# @click.option('-v', '--verbose', is_flag=True, help='Print debugs.')
+@click.version_option(__version__)
+@click.argument('search')
+def search(search, distrowatch, thepiratebay, kickasstorrent, skytorrents, nyaa, xbit, top, copy, page_limit, clear_html):
+    """Command-line torrent search tool."""
+    _PRIVATE_MODULES = (
+        thepiratebay,
+        kickasstorrent,
+        skytorrents,
+        nyaa,
+        xbit
+    ) # These modules are only enabled through manual configuration.
+
+    #configure verbose
+    # _v_print = print if verbose else logger.debug 
+    # global v_print
+    # v_print = _v_print
+
+    torrench.input_title = search
+    torrench.page_limit = page_limit
+    torrench.copy = copy
+
+    if not clear_html:
+        torrench.verify_input()
+        torrench.input_title = torrench.input_title.replace("'", "")
+
+    if clear_html:
+        if not thepiratebay:
+            click.echo('error: use -c with -t only')
+            sys.exit(2)
         else:
-            self.logger.debug("Using linuxtracker")
-            self.logger.debug("Input title: [%s]" % (self.input_title))
-            import torrench.modules.linuxtracker as linuxtracker
-            linuxtracker.main(self.input_title)
+            torrench.remove_temp_files()
+    if any(_PRIVATE_MODULES):
+        if not torrench.file_exists():
+            click.echo("\nConfig file not configured. Configure to continue. Read docs for more info.\n")
+            click.echo("Config file either does not exist or is not enabled! Exiting!")
+            sys.exit(2)
+        else:
+            if thepiratebay:
+                logger.debug('using thepiratebay')
+                if top:
+                    logger.debug('selected TPB TOP-torrents')
+                    torrench.input_title = None
+                    torrench.page_limit = None
+                logger.debug("Input title: [%s] ; page_limit: [%s]" % (torrench.input_title, torrench.page_limit))
+                import modules.thepiratebay as tpb
+                tpb.main(torrench.input_title, torrench.page_limit)
+            elif kickasstorrent:
+                logger.debug("Using kickasstorrents")
+                logger.debug("Input title: [%s] ; page_limit: [%s]" % (torrench.input_title, torrench.page_limit))
+                import modules.kickasstorrent as kat
+                kat.main(torrench.input_title, torrench.page_limit)
+            elif skytorrents:
+                logger.debug("Using skytorrents")
+                if top:
+                    logger.debug("selected SkyTorrents TOP-torrents")
+                    torrench.input_title = None
+                    torrench.page_limit = None
+                logger.debug("Input title: [%s] ; page_limit: [%s]" % (torrench.input_title, torrench.page_limit))
+                import modules.skytorrents as sky
+                sky.main(torrench.input_title, torrench.page_limit)           
+            elif nyaa:
+                logger.debug("Using Nyaa.si")
+                import modules.nyaa as nyaa
+                nyaa.main(torrench.input_title)
+            elif xbit:
+                logger.debug("Using XBit.pw")
+                logger.debug("Input title: [%s]" % (torrench.input_title))
+                import modules.xbit as xbit
+                xbit.main(torrench.input_title)
+    elif distrowatch:
+        logger.debug("Using distrowatch")
+        logger.debug("Input title: [%s]" % (torrench.input_title))
+        import modules.distrowatch as distrowatch
+        distrowatch.main(torrench.input_title)
+    else:
+        v_print("Using linuxtracker")
+        v_print("Input title: [%s]" % (torrench.input_title))
+        import modules.linuxtracker as linuxtracker
+        linuxtracker.main(torrench.input_title)
 
 
 def main():
-    """Execution begins here."""
-    try:
-        tr = Torrench()
-        tr.define_args()
-        if tr.args.top:
-            if tr.args.thepiratebay or tr.args.skytorrents:
-                tr.resolve_args()
-            else:
-                print("error: --top is only supported with -t/-s")
-                sys.exit(2)
-        else:
-            tr.input_title = tr.args.search
-            tr.page_limit = tr.args.limit
-            if not tr.args.clear_html:
-                tr.verify_input()
-                tr.input_title = tr.input_title.replace("'", "")
-            tr.resolve_args()
-    except KeyboardInterrupt as e:
-        tr.logger.debug("Keyboard interupt! Exiting!")
-        print("\n\nAborted!")
+    search()
 
-
-if __name__ == '__main__':
-    main()
