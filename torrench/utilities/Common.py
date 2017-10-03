@@ -130,11 +130,31 @@ class Common:
             self.logger.exception(e)
             click.echo("\nAborted!\n")
 
+
+
+
+
+
     def show_output(self, masterlist, headers):
         """To display tabular output of torrent search."""
         try:
             self.output = tabulate(masterlist, headers=headers, tablefmt="grid")
-            click.echo("\n%s" %(self.output))
+            import inquirer
+            choices = list()
+            splitted = self.output.splitlines()
+            for item in splitted:
+                choices.append(item)
+                # print(choices, '\r\n\r\n\r\n\r\n\r\n')
+            inquirer.render.console._list.List._current_index = _current_index
+            inquirer.render.console._list.List.process_input = process_input
+
+            myList = inquirer.List('torrent',
+                            message="Which torrent do you need?",
+                            choices=choices,)
+
+            questions = [myList,]
+            answers = inquirer.prompt(questions)
+            # click.echo("\n%s" %(self.output))
         except KeyboardInterrupt as e:
             self.logger.exception(e)
             click.echo("\nAborted!\n")
@@ -231,3 +251,34 @@ class Common:
         except Exception as e:
             self.logger.exception(e)
             click.echo(click.style("[ERROR]: %s" % (e),fg='red'))
+
+def process_input(self, pressed):
+    from readchar import key
+    from inquirer import errors
+    question = self.question
+
+    self.current = 3 if self.current is 3 else self.current
+    if pressed == key.UP:
+        if question.carousel and self.current == 0:
+            self.current = len(question.choices) - 1
+        else:
+            self.current = max(3, self.current - 2)
+        return
+    if pressed == key.DOWN:
+        if question.carousel and self.current == len(question.choices) - 1:
+            self.current = 3
+        else:
+            self.current = self.current + 2
+        return
+    if pressed == key.ENTER:
+        value = self.question.choices[self.current]
+        raise errors.EndOfInput(getattr(value, 'value', value))
+        raise errors.EndOfInput(self.question.choices[self.current])
+    if pressed == key.CTRL_C:
+        raise KeyboardInterrupt()
+
+def _current_index(self):
+    try:
+        return self.question.choices.index(self.question.default)
+    except ValueError:
+        return 3
