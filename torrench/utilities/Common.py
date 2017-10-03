@@ -5,7 +5,6 @@ import sys
 import platform
 import requests
 from bs4 import BeautifulSoup
-import colorama
 from tabulate import tabulate
 import logging
 import subprocess
