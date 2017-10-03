@@ -3,5 +3,4 @@ beautifulsoup4
 lxml
 requests
 tabulate
-colorama
 pyperclip
