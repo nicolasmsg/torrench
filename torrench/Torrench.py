@@ -5,7 +5,7 @@ import sys
 import argparse
 import logging
 import click
-from torrench.utilities.Config import Config
+from torrench.utilities.config import Config
 
 
 logger = logging.getLogger('log1')

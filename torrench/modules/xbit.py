@@ -5,7 +5,7 @@ import logging
 import sys
 import time
 import platform
-from torrench.utilities.Config import Config
+from torrench.utilities.config import Config
 import click
 
 

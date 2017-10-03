@@ -2,7 +2,7 @@
 import os
 import logging
 from configparser import SafeConfigParser
-from .Common import Common
+from .common import Common
 
 
 class Config(Common):

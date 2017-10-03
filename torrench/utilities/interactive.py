@@ -8,7 +8,7 @@ import torrench.modules.nyaa as nyaa_module
 import torrench.modules.skytorrents as sky
 import torrench.modules.thepiratebay as tpb_module
 import torrench.modules.xbit as xbit_module
-from torrench.utilities.Config import Config
+from torrench.utilities.config import Config
 import click
 
 

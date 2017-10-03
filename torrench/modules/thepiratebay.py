@@ -4,7 +4,7 @@ import sys
 import platform
 import logging
 import torrench.modules.tpb_details as tpb_details
-from torrench.utilities.Config import Config
+from torrench.utilities.config import Config
 import click
 
 class ThePirateBay(Config):

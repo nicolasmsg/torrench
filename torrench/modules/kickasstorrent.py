@@ -3,7 +3,7 @@
 import sys
 import platform
 import logging
-from torrench.utilities.Config import Config
+from torrench.utilities.config import Config
 import click
 
 
