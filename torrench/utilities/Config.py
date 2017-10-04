@@ -51,22 +51,22 @@ class Config(Common):
 
         Proxies are read from config.ini file.
         """
+        proxy_keys = {
+            'tpb': 'TPB_URL',
+            'kat': 'KAT_URL',
+            'sky': 'SKY_URL',
+            'xbit': 'XBIT_URL',
+            'nyaa': 'NYAA_URL'
+        }
         self.logger.debug("getting proxies for '%s'" % (name))
         temp = []
         self.config.read(self.config_file)
-        if name == 'tpb':
-            name = 'TPB_URL'
-        elif name == 'kat':
-            name = 'KAT_URL'
-        elif name == "sky":
-            name = "SKY_URL"
-        elif name == "xbit":
-            name = "XBIT_URL"
-        elif name == "nyaa":
-            name = "NYAA_URL"
-        self.url = self.config.get('Torrench-Config', name)
+
+        key_name = proxy_keys[name]
+        
+        self.url = self.config.get('Torrench-Config', key_name)
         self.urllist = self.url.split()
-        if name == 'TPB_URL':
+        if key_name == 'TPB_URL':
             soup = self.http_request(self.urllist[-1])
             link = soup.find_all('td', class_='site')
             del self.urllist[-1]

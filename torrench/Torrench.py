@@ -8,7 +8,7 @@ import click
 from torrench.utilities.config import Config
 
 
-logger = logging.getLogger('log1')
+logger = logging.getLogger(__name__)
 
 
 class Torrench(Config):
@@ -18,16 +18,11 @@ class Torrench(Config):
     def __init__(self):
         """Initialisations."""
         Config.__init__(self)
-        self.logger = logging.getLogger('log1')
         self.args = None # Should probable be deleted
         self.copy = False
         self.input_title = None
         self.page_limit = 0
         self.interactive = False
-
-    # @staticmethod
-    # def get_version():
-    #     return self.__version__
 
     def remove_temp_files(self):
         """
@@ -38,24 +33,24 @@ class Torrench(Config):
         Default location for temp files is
         ~/.torrench/temp (Windows/linux)
         """
-        self.logger.debug("Selected -c :: remove tpb temp html files.")
+        logger.debug("Selected -c :: remove tpb temp html files.")
         home = os.path.expanduser(os.path.join('~', '.torrench'))
         temp_dir = os.path.join(home, "temp")
-        self.logger.debug("temp directory default location: %s" % (temp_dir))
+        logger.debug("temp directory default location: %s" % (temp_dir))
         if not os.path.exists(temp_dir):
             click.echo("Directory not initialised. Exiting!")
-            self.logger.debug("directory not found")
+            logger.debug("directory not found")
             sys.exit(2)
         files = os.listdir(temp_dir)
         if not files:
             click.echo("Directory empty. Nothing to remove")
-            self.logger.debug("Directory empty!")
+            logger.debug("Directory empty!")
             sys.exit(2)
         else:
             for count, file_name in enumerate(files, 1):
                 os.remove(os.path.join(temp_dir, file_name))
             click.echo("Removed {} file(s).".format(count))
-            self.logger.debug("Removed {} file(s).".format(count))
+            logger.debug("Removed {} file(s).".format(count))
             sys.exit(2)    
 
     def check_copy(self):
@@ -66,12 +61,12 @@ class Torrench(Config):
     def verify_input(self):
         """To verify if input given is valid or not."""
         if self.input_title is None and not self.interactive:
-            self.logger.debug("Bad input! Input string expected! Got 'None'")
+            logger.debug("Bad input! Input string expected! Got 'None'")
             click.echo("\nInput string expected.\nUse --help for more\n")
             sys.exit(2)
 
         if self.page_limit <= 0 or self.page_limit > 50:
-            self.logger.debug("Invalid page_limit entered: %d" % (tr.page_limit))
+            logger.debug("Invalid page_limit entered: %d" % (tr.page_limit))
             click.echo("Enter valid page input [0<p<=50]")
             sys.exit(2)
 

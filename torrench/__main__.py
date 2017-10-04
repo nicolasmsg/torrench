@@ -9,7 +9,7 @@ import torrench.Torrench as Torrench
 import torrench.utilities.logger as logger
 
 logging.config.dictConfig(logger.LOG_SETTINGS)
-mylogger = logging.getLogger('log1')
+mylogger = logging.getLogger(__name__)
 
 if platform.system() == 'Windows':
     from multiprocessing import Queue

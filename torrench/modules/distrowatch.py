@@ -17,6 +17,8 @@ class DistroWatch(Common):
     Default download location is $HOME/downloads/torrench
     """
 
+    name = ''
+
     def __init__(self, title):
         """Initialisations."""
         Common.__init__(self)
