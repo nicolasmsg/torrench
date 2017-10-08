@@ -34,16 +34,17 @@ class InteractiveMode:
             self._caller(query[:2], query[3:])
         elif query[:4] in ('!q', 'quit'):
             self.logger.debug("!q selected. Exiting interactive mode")
-            print("Bye!")
+            click.prompt("Bye!")
             _exit(2)
         else:
             self.logger.debug("Invalid command input")
-            print('Invalid command! Try `!h` or `help` for help.')
+            click.prompt('Invalid command! Try `!h` or `help` for help.')
 
     def _set_modules(self):
         """
         Map functions to commands and return dictionary.
         """
+
         if Config().file_exists():
             self._modules = {
                             '!t': tpb_module,
@@ -75,12 +76,9 @@ class InteractiveMode:
         _modules = self._set_modules()
         if query and module in _modules and not query.isspace():
             self.logger.debug("Selected module %s, query: %s" % ((module), query))
-            if module in ['!t', '!k', '!s']:
-                _modules[module].main(query, page_limit=1)
-            else:
-                _modules[module].main(query)
+            _modules[module].main(query)
         else:
-            print("You called an invalid module or provided an empty query.")
+            click.prompt("You called an invalid module or provided an empty query.")
             self.logger.debug("Called an invalid module or provided an empty query.")
 
     @staticmethod
@@ -105,7 +103,7 @@ class InteractiveMode:
         These commands are only available after a `config.ini` file has been set.
         See the documentation for more information.
         """
-        print(help_text)
+        click.prompt(help_text)
 
 
 def inter():

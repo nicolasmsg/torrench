@@ -6,43 +6,45 @@ import argparse
 import logging
 import click
 from torrench.utilities.config import Config
+from torrench.utilities.module_loader import list_commands, get_command
+from torrench.utilities.constants import TORRENCH_SETTINGS
 from torrench.core.torrench import pass_torrench, Torrench
 from torrench import __version__
 
 
 logger = logging.getLogger(__name__)
 
-TORRENCH_SETTINGS = dict(auto_envvar_prefix='TORRENCH')
-
-cmd_folder = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                          'modules'))
-
 
 class CommandsLoader(click.MultiCommand):
 
     def list_commands(self, ctx):
-        rv = []
-        ctx.cmd_map = {}
-
-        for filename in os.listdir(cmd_folder):
-            if filename.endswith('.py') and filename.startswith('cmd_'):
-                mod = __import__('torrench.modules.' + filename[:-3], 
-                        None, None, ['CMD_NAME'])
-                rv.append(mod.CMD_NAME)
-                ctx.cmd_map[mod.CMD_NAME] = filename[:-3]
-        rv.sort()
-        return rv
+        return list_commands()
 
     def get_command(self, ctx, name):
-        self.list_commands(ctx)
-        try:
-            if sys.version_info[0] == 2:
-                name = name.encode('ascii', 'replace')
-            mod = __import__('torrench.modules.' + ctx.cmd_map[name],
-                             None, None, ['cli'])
-        except ImportError as ex:
-            return
-        return mod.cli
+        return get_command(name)
+    # def list_commands(self, ctx):
+    #     rv = []
+    #     ctx.cmd_map = {}
+
+    #     for filename in os.listdir(cmd_folder):
+    #         if filename.endswith('.py') and filename.startswith('cmd_'):
+    #             mod = __import__('torrench.modules.' + filename[:-3], 
+    #                     None, None, ['CMD_NAME'])
+    #             rv.append(mod.CMD_NAME)
+    #             ctx.cmd_map[mod.CMD_NAME] = filename[:-3]
+    #     rv.sort()
+    #     return rv
+
+    # def get_command(self, ctx, name):
+    #     self.list_commands(ctx)
+    #     try:
+    #         if sys.version_info[0] == 2:
+    #             name = name.encode('ascii', 'replace')
+    #         mod = __import__('torrench.modules.' + ctx.cmd_map[name],
+    #                          None, None, ['cli'])
+    #     except ImportError as ex:
+    #         return
+    #     return mod.cli
 
 
 @click.command(cls=CommandsLoader, context_settings=TORRENCH_SETTINGS, invoke_without_command=True)

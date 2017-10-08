@@ -243,7 +243,7 @@ class KickassTorrents(Config):
                 continue
 
 
-def main(title, page_limit):
+def main(title, page_limit=1):
     """Execution begins here."""
     try:
         click.echo("\n[KickassTorrents]\n")
