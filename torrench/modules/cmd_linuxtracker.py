@@ -3,8 +3,22 @@
 import sys
 import logging
 from torrench.utilities.common import Common
+from torrench.core.torrench import pass_torrench
 import click
 
+
+CMD_NAME = 'linux'
+
+
+@click.command('linux', short_help='search on linux tracker.')
+@click.argument('search')
+@pass_torrench
+@click.pass_context
+def cli(ctx, torrench, search):
+    """Initializes a repository."""
+    click.echo('search on linux tracker')
+    torrench.input_title = search 
+    main(torrench.input_title)
 
 class LinuxTracker(Common):
     """

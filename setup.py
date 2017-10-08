@@ -20,7 +20,7 @@ setup(
     description=(DESCRIPTION),
     license="GPL",
     url="https://github.com/kryptxy/torrench",
-    packages=['torrench', 'torrench.modules','torrench.utilities'],
+    packages=['torrench', 'torrench.modules','torrench.utilities', 'torrench.core'],
     install_requires=['beautifulsoup4','lxml','requests','tabulate','colorama', 'pyperclip'],
     long_description=(LONG_DESCRIPTION),
     entry_points={'console_scripts': ['torrench = torrench.__main__:main']},

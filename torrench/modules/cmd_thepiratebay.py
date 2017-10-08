@@ -5,7 +5,30 @@ import platform
 import logging
 import torrench.modules.tpb_details as tpb_details
 from torrench.utilities.config import Config
+from torrench.core.torrench import pass_torrench
 import click
+
+
+CMD_NAME = 'tpb'
+
+
+@click.command('tpb', short_help='search on ThePirateBay.')
+@click.option('-c', '--clear-html', is_flag=True, help='Clear all [TPB] torrent description HTML files and exit.')
+@click.option('--top', is_flag=True, help='Get top torrents [TPB/SkyTorrents]')
+@click.option('-p', '--page-limit', default=1, help='LIMIT Number of pages to fetch results from (1 page = 30 results). [default: 1] [TPB/KAT/SkyTorrents]')
+@click.argument('search', required=False)
+@pass_torrench
+@click.pass_context
+def cli(ctx, torrench, clear_html, top, page_limit, search):
+    """Initializes a repository."""
+    click.echo('search on ThePirateBay: ' + search)
+    torrench.input_title = search
+    torrench.page_limit = page_limit
+    if top:
+        torrench.input_title = None
+        torrench.page_limit = None
+    main(torrench.input_title, torrench.page_limit)
+
 
 class ThePirateBay(Config):
     """

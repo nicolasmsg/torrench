@@ -6,171 +6,66 @@ import argparse
 import logging
 import click
 from torrench.utilities.config import Config
+from torrench.core.torrench import pass_torrench, Torrench
+from torrench import __version__
 
 
 logger = logging.getLogger(__name__)
 
+TORRENCH_SETTINGS = dict(auto_envvar_prefix='TORRENCH')
 
-class Torrench(Config):
-
-    __version__ = "Torrench (1.0.54)"
-
-    def __init__(self):
-        """Initialisations."""
-        Config.__init__(self)
-        self.args = None # Should probable be deleted
-        self.copy = False
-        self.input_title = None
-        self.page_limit = 0
-        self.interactive = False
-
-    def remove_temp_files(self):
-        """
-        To remove TPB HTML files (-c).
-
-        Clearing HTML files only works for TPB (-t)
-        (since only TPB generates HTML for torrent descriptions)
-        Default location for temp files is
-        ~/.torrench/temp (Windows/linux)
-        """
-        logger.debug("Selected -c :: remove tpb temp html files.")
-        home = os.path.expanduser(os.path.join('~', '.torrench'))
-        temp_dir = os.path.join(home, "temp")
-        logger.debug("temp directory default location: %s" % (temp_dir))
-        if not os.path.exists(temp_dir):
-            click.echo("Directory not initialised. Exiting!")
-            logger.debug("directory not found")
-            sys.exit(2)
-        files = os.listdir(temp_dir)
-        if not files:
-            click.echo("Directory empty. Nothing to remove")
-            logger.debug("Directory empty!")
-            sys.exit(2)
-        else:
-            for count, file_name in enumerate(files, 1):
-                os.remove(os.path.join(temp_dir, file_name))
-            click.echo("Removed {} file(s).".format(count))
-            logger.debug("Removed {} file(s).".format(count))
-            sys.exit(2)    
-
-    def check_copy(self):
-        """Check if --copy argument is present."""
-        if self.copy:
-            return True
-
-    def verify_input(self):
-        """To verify if input given is valid or not."""
-        if self.input_title is None and not self.interactive:
-            logger.debug("Bad input! Input string expected! Got 'None'")
-            click.echo("\nInput string expected.\nUse --help for more\n")
-            sys.exit(2)
-
-        if self.page_limit <= 0 or self.page_limit > 50:
-            logger.debug("Invalid page_limit entered: %d" % (tr.page_limit))
-            click.echo("Enter valid page input [0<p<=50]")
-            sys.exit(2)
-
-torrench = Torrench()
+cmd_folder = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                          'modules'))
 
 
-@click.command()
-@click.option('-d', '--distrowatch', is_flag=True, help='Search distrowatch')
-@click.option('-t', '--thepiratebay', is_flag=True, help='Search thepiratebay (TPB)')
-@click.option('-k', '--kickasstorrent', is_flag=True, help='Search KickassTorrent (KAT)')
-@click.option('-s','--skytorrents', is_flag=True, help='Search SkyTorrents')
-@click.option('-n', '--nyaa', is_flag=True, help='Search Nyaa')
-@click.option('-x', '--xbit', is_flag=True, help='Search XBit.pw')
+class CommandsLoader(click.MultiCommand):
+
+    def list_commands(self, ctx):
+        rv = []
+        ctx.cmd_map = {}
+
+        for filename in os.listdir(cmd_folder):
+            if filename.endswith('.py') and filename.startswith('cmd_'):
+                mod = __import__('torrench.modules.' + filename[:-3], 
+                        None, None, ['CMD_NAME'])
+                rv.append(mod.CMD_NAME)
+                ctx.cmd_map[mod.CMD_NAME] = filename[:-3]
+        rv.sort()
+        return rv
+
+    def get_command(self, ctx, name):
+        self.list_commands(ctx)
+        try:
+            if sys.version_info[0] == 2:
+                name = name.encode('ascii', 'replace')
+            mod = __import__('torrench.modules.' + ctx.cmd_map[name],
+                             None, None, ['cli'])
+        except ImportError as ex:
+            return
+        return mod.cli
+
+
+@click.command(cls=CommandsLoader, context_settings=TORRENCH_SETTINGS, invoke_without_command=True)
+@click.version_option(__version__)
 @click.option('-i', '--interactive', is_flag=True, help='Enable interactive mode for searches')
-@click.option('--top', is_flag=True, help='Get top torrents [TPB/SkyTorrents]')
-@click.option('--copy', is_flag=True, help='Copy magnetic link to clipboard')
-@click.option('-p', '--page-limit', default=1, help='LIMIT Number of pages to fetch results from (1 page = 30 results). [default: 1] [TPB/KAT/SkyTorrents]')
-@click.option('-c', '--clear-html', is_flag=True, help='Clear all [TPB] torrent description HTML files and exit.')
-# @click.option('-v', '--verbose', is_flag=True, help='Print debugs.')
-@click.version_option(Torrench.__version__)
-@click.argument('search', required=False)
-def search(search, distrowatch,
-           thepiratebay, kickasstorrent,
-           skytorrents, nyaa, xbit, top,
-           copy, page_limit, clear_html,
-           interactive):
+@click.option('-s', '--search', help='Search in default proxy')
+@click.option('--set-default', help='Set default proxy')
+@click.option('--import-module', type=click.Path(exists=True, file_okay=True, 
+                                          resolve_path=True), help='Import the given module')
+@pass_torrench
+@click.pass_context
+def cli(ctx, torrench, interactive, search, set_default, import_module):
     """Command-line torrent search tool."""
-    _PRIVATE_MODULES = (
-        thepiratebay,
-        kickasstorrent,
-        skytorrents,
-        nyaa,
-        xbit
-    ) # These modules are only enabled through manual configuration.
-
-    torrench.input_title = search
-    torrench.page_limit = page_limit
-    torrench.copy = copy
-    torrench.interactive = interactive 
-
-    if not clear_html and not interactive:
-        torrench.verify_input()
-        torrench.input_title = torrench.input_title.replace("'", "")
-
-    if clear_html:
-        if not thepiratebay:
-            click.echo('error: use -c with -t only')
-            sys.exit(2)
+    if ctx.invoked_subcommand is None:
+        click.echo('I was invoked without subcommand')
+        if import_module:
+            click.echo("I'm importing : ", import_module)
+            return
+        if search:
+            click.echo('Searching ' + search + ' in default proxy')
         else:
-            torrench.remove_temp_files()
-    if any(_PRIVATE_MODULES):
-        if not torrench.file_exists():
-            click.echo("\nConfig file not configured. Configure to continue. Read docs for more info.\n")
-            click.echo("Config file either does not exist or is not enabled! Exiting!")
-            sys.exit(2)
-        else:
-            if thepiratebay:
-                logger.debug('using thepiratebay')
-                if top:
-                    logger.debug('selected TPB TOP-torrents')
-                    torrench.input_title = None
-                    torrench.page_limit = None
-                logger.debug("Input title: [%s] ; page_limit: [%s]" % (torrench.input_title, torrench.page_limit))
-                import torrench.modules.thepiratebay as tpb
-                tpb.main(torrench.input_title, torrench.page_limit)
-            elif kickasstorrent:
-                logger.debug("Using kickasstorrents")
-                logger.debug("Input title: [%s] ; page_limit: [%s]" % (torrench.input_title, torrench.page_limit))
-                import torrench.modules.kickasstorrent as kat
-                kat.main(torrench.input_title, torrench.page_limit)
-            elif skytorrents:
-                logger.debug("Using skytorrents")
-                if top:
-                    logger.debug("selected SkyTorrents TOP-torrents")
-                    torrench.input_title = None
-                    torrench.page_limit = None
-                logger.debug("Input title: [%s] ; page_limit: [%s]" % (torrench.input_title, torrench.page_limit))
-                import torrench.modules.skytorrents as sky
-                sky.main(torrench.input_title, torrench.page_limit)           
-            elif nyaa:
-                logger.debug("Using Nyaa.si")
-                import torrench.modules.nyaa as nyaa
-                nyaa.main(torrench.input_title)
-            elif xbit:
-                logger.debug("Using XBit.pw")
-                logger.debug("Input title: [%s]" % (torrench.input_title))
-                import torrench.modules.xbit as xbit
-                xbit.main(torrench.input_title)
-    elif distrowatch:
-        logger.debug("Using distrowatch")
-        logger.debug("Input title: [%s]" % (torrench.input_title))
-        import torrench.modules.distrowatch as distrowatch
-        distrowatch.main(torrench.input_title)
-    elif interactive:
-        logger.debug("Using interactive mode")
-        import torrench.utilities.interactive as interactive
-        interactive.inter()
+            import torrench.utilities.interactive as interactive
+            click.echo('Loading interactive mode')
+            interactive.inter()
     else:
-        logger.debug("Using linuxtracker")
-        logger.debug("Input title: [%s]" % (torrench.input_title))
-        import torrench.modules.linuxtracker as linuxtracker
-        linuxtracker.main(torrench.input_title)
-
-
-def main():
-    search()
-
+        click.echo('I am about to invoke %s' % ctx.invoked_subcommand)

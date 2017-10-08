@@ -4,7 +4,22 @@ import sys
 import logging
 import platform
 from torrench.utilities.config import Config
+from torrench.core.torrench import pass_torrench
 import click
+
+
+CMD_NAME = 'nyaa'
+
+
+@click.command('nyaa', short_help='search on NyaaTracker.')
+@click.argument('search')
+@pass_torrench
+@click.pass_context
+def cli(ctx, torrench, search):
+    """Initializes a repository."""
+    click.echo('search on NyaaTracker')
+    torrench.input_title = search 
+    main(torrench.input_title)
 
 
 class NyaaTracker(Config):

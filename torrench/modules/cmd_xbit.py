@@ -6,7 +6,22 @@ import sys
 import time
 import platform
 from torrench.utilities.config import Config
+from torrench.core.torrench import pass_torrench
 import click
+
+
+CMD_NAME = 'xbit'
+
+
+@click.command('xbit', short_help='search on Xbit.')
+@click.argument('search')
+@pass_torrench
+@click.pass_context
+def cli(ctx, torrench, search):
+    """Initializes a repository."""
+    click.echo('search on Xbit')
+    torrench.input_title = search 
+    main(torrench.input_title)
 
 
 class XBit(Config):

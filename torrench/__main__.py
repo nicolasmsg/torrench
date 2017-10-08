@@ -5,7 +5,7 @@ import os
 import sys
 import logging
 import logging.config
-import torrench.Torrench as Torrench
+import torrench.torrench as Torrench
 import torrench.utilities.logger as logger
 
 logging.config.dictConfig(logger.LOG_SETTINGS)
@@ -28,7 +28,7 @@ def main():
     mylogger.debug(arch)
     mylogger.debug(pyversion)
     mylogger.debug("Torrench started.")
-    Torrench.main()
+    Torrench.cli()
 
 
 if __name__ == "__main__":

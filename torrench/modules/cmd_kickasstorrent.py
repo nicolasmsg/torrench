@@ -4,8 +4,22 @@ import sys
 import platform
 import logging
 from torrench.utilities.config import Config
+from torrench.core.torrench import pass_torrench
 import click
 
+CMD_NAME = 'kat'
+
+@click.command('kat', short_help='search on KickassTorrents.')
+@click.argument('search')
+@click.option('-p', '--page-limit', default=1, help='LIMIT Number of pages to fetch results from (1 page = 30 results). [default: 1]')
+@pass_torrench
+@click.pass_context
+def cli(ctx, torrench, search, page_limit):
+    """Initializes a repository."""
+    click.echo('search on KickassTorrents')
+    torrench.input_title = search 
+    torrench.page_limit = page_limit
+    main(torrench.input_title, torrench.page_limit)
 
 class KickassTorrents(Config):
     """
