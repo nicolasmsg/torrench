@@ -1,14 +1,16 @@
 
 import logging
+import sys
 from sys import exit as _exit
-import torrench.modules.distrowatch as distrowatch
-import torrench.modules.kickasstorrent as kat
-import torrench.modules.linuxtracker as linuxtracker
-import torrench.modules.nyaa as nyaa_module
-import torrench.modules.skytorrents as sky
-import torrench.modules.thepiratebay as tpb_module
-import torrench.modules.xbit as xbit_module
+# import torrench.modules.distrowatch as distrowatch
+# import torrench.modules.kickasstorrent as kat
+# import torrench.modules.linuxtracker as linuxtracker
+# import torrench.modules.nyaa as nyaa_module
+# import torrench.modules.skytorrents as sky
+# import torrench.modules.thepiratebay as tpb_module
+# import torrench.modules.xbit as xbit_module
 from torrench.utilities.config import Config
+import torrench.utilities.module_loader as mod_loader 
 import click
 
 
@@ -18,21 +20,43 @@ class InteractiveMode:
     It resolves the arguments, parses and calls their respective modules
     :params: None
     """
+
     def __init__(self):
         self._modules = {}
         self.logger = logging.getLogger('log1')
+        self.load_modules()
+
+    def load_modules(self):
+        cmds = mod_loader.list_commands()
+        for cmd in cmds:
+            if sys.version_info[0] == 2:
+                name = name.encode('ascii', 'replace')
+            try:
+                mod = __import__('torrench.modules.' + mod_loader.cmd_map[cmd],
+                                None, None, ['cli'])
+            except FileNotFoundError:
+                if Config().file_exists():
+                    mod = __import__('torrench.modules.privates.' + mod_loader.cmd_map[cmd],
+                        None, None, ['main'])
+                else:
+                    continue
+            self._modules['!' + cmd] = mod
+        return self._modules
 
     def parser(self, query):
         """
         :query: String to query the module.
         """
-        _available_modules = self._set_modules().keys()
-        if query[:4] in ('!h', 'help'):
+        _available_modules = self.load_modules().keys()
+        splitted_query = query.split(' ') 
+        module = splitted_query[0]
+        print('_available_modules', _available_modules)
+        if module in ('!h', 'help'):
             self.logger.debug("Display !h (help menu)")
             self._interactive_help()
-        elif query[:2] in _available_modules:
-            self._caller(query[:2], query[3:])
-        elif query[:4] in ('!q', 'quit'):
+        elif module in _available_modules:
+            self._caller(module, splitted_query[1])
+        elif module in ('!q', 'quit'):
             self.logger.debug("!q selected. Exiting interactive mode")
             click.prompt("Bye!")
             _exit(2)
@@ -40,31 +64,31 @@ class InteractiveMode:
             self.logger.debug("Invalid command input")
             click.prompt('Invalid command! Try `!h` or `help` for help.')
 
-    def _set_modules(self):
-        """
-        Map functions to commands and return dictionary.
-        """
+    # def _set_modules(self):
+    #     """
+    #     Map functions to commands and return dictionary.
+    #     """
 
-        if Config().file_exists():
-            self._modules = {
-                            '!t': tpb_module,
-                            '!n': nyaa_module,
-                            '!k': kat,
-                            '!x': xbit_module,
-                            '!d': distrowatch,
-                            '!l': linuxtracker,
-                            '!s': sky
-                            }
-            return self._modules
-        else:
-            self.logger.debug("Config file not setup!")
+    #     if Config().file_exists():
+    #         self._modules = {
+    #                         '!t': tpb_module,
+    #                         '!n': nyaa_module,
+    #                         '!k': kat,
+    #                         '!x': xbit_module,
+    #                         '!d': distrowatch,
+    #                         '!l': linuxtracker,
+    #                         '!s': sky
+    #                         }
+    #         return self._modules
+    #     else:
+    #         self.logger.debug("Config file not setup!")
 
-        self._modules = {
-                            '!d': distrowatch,
-                            '!l': linuxtracker
-                            }
+    #     self._modules = {
+    #                         '!d': distrowatch,
+    #                         '!l': linuxtracker
+    #                         }
 
-        return self._modules
+    #     return self._modules
 
     def _caller(self, module, query):
         """
@@ -73,12 +97,12 @@ class InteractiveMode:
         :module: Module to use in query.
         :query: String to search for.
         """
-        _modules = self._set_modules()
-        if query and module in _modules and not query.isspace():
+        # _modules = self._set_modules()
+        if query and module in self._modules and not query.isspace():
             self.logger.debug("Selected module %s, query: %s" % ((module), query))
-            _modules[module].main(query)
+            self._modules[module].main(query)
         else:
-            click.prompt("You called an invalid module or provided an empty query.")
+            click.prompt("You called an invalid module or provided an empty query. Module: {}, query: {}".format(module, query))
             self.logger.debug("Called an invalid module or provided an empty query.")
 
     @staticmethod
@@ -93,13 +117,13 @@ class InteractiveMode:
         !t <string> - Search on LinuxTorrents
         !d <string> - Search on DistroWatch
 
-        =========== Requires Config file ==========
+        =========== Private modules. Requires Config file ==========
         !n <string> - Search on nyaa.si for anime.
         !t <string> - Search on ThePirateBay.
         !k <string> - Search on KickAssTorrents.
         !s <string> - Search on SkyTorrents
         !x <string> - Search on XBit.pw
-        ===========================================
+        =============================================================
         These commands are only available after a `config.ini` file has been set.
         See the documentation for more information.
         """

@@ -10,22 +10,12 @@ def list_commands():
     global cmd_map
     cmd_map = {}
 
-    # Default commands
     for filename in os.listdir(CMD_FOLDER):
         if filename.endswith('.py') and filename.startswith('cmd_'):
             mod = __import__('torrench.modules.' + filename[:-3], 
                     None, None, ['CMD_NAME'])
             rv.append(mod.CMD_NAME)
             cmd_map[mod.CMD_NAME] = filename[:-3]
-
-    # Private commands
-    for filename in os.listdir(PRIVATE_CMD_FOLDER):
-        if filename.endswith('.py') and filename.startswith('cmd_'):
-            mod = __import__('torrench.modules.privates.' + filename[:-3], 
-                    None, None, ['CMD_NAME'])
-            rv.append(mod.CMD_NAME)
-            cmd_map[mod.CMD_NAME] = filename[:-3]
-
     rv.sort()
     return rv
 
