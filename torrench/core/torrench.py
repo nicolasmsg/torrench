@@ -8,7 +8,6 @@ from torrench.utilities.config import Config
 logger = logging.getLogger(__name__)
 
 
-
 class Torrench(Config):
 
     def __init__(self):
@@ -66,7 +65,5 @@ class Torrench(Config):
             click.echo("Enter valid page input [0<p<=50]")
             sys.exit(2)
 
-
-# torrench = Torrench()
 
 pass_torrench = click.make_pass_decorator(Torrench, ensure=True)

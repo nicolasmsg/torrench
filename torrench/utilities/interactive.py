@@ -1,14 +1,6 @@
 
 import logging
 import sys
-from sys import exit as _exit
-# import torrench.modules.distrowatch as distrowatch
-# import torrench.modules.kickasstorrent as kat
-# import torrench.modules.linuxtracker as linuxtracker
-# import torrench.modules.nyaa as nyaa_module
-# import torrench.modules.skytorrents as sky
-# import torrench.modules.thepiratebay as tpb_module
-# import torrench.modules.xbit as xbit_module
 from torrench.utilities.config import Config
 import torrench.utilities.module_loader as mod_loader 
 import click
@@ -33,11 +25,11 @@ class InteractiveMode:
                 name = name.encode('ascii', 'replace')
             try:
                 mod = __import__('torrench.modules.' + mod_loader.cmd_map[cmd],
-                                None, None, ['cli'])
+                                None, None, ['cli', 'main'])
             except FileNotFoundError:
                 if Config().file_exists():
                     mod = __import__('torrench.modules.privates.' + mod_loader.cmd_map[cmd],
-                        None, None, ['main'])
+                        None, None, ['cli', 'main'])
                 else:
                     continue
             self._modules['!' + cmd] = mod
@@ -50,7 +42,6 @@ class InteractiveMode:
         _available_modules = self.load_modules().keys()
         splitted_query = query.split(' ') 
         module = splitted_query[0]
-        print('_available_modules', _available_modules)
         if module in ('!h', 'help'):
             self.logger.debug("Display !h (help menu)")
             self._interactive_help()
@@ -58,37 +49,11 @@ class InteractiveMode:
             self._caller(module, splitted_query[1])
         elif module in ('!q', 'quit'):
             self.logger.debug("!q selected. Exiting interactive mode")
-            click.prompt("Bye!")
-            _exit(2)
+            print("Bye!")
+            sys.exit(2)
         else:
             self.logger.debug("Invalid command input")
-            click.prompt('Invalid command! Try `!h` or `help` for help.')
-
-    # def _set_modules(self):
-    #     """
-    #     Map functions to commands and return dictionary.
-    #     """
-
-    #     if Config().file_exists():
-    #         self._modules = {
-    #                         '!t': tpb_module,
-    #                         '!n': nyaa_module,
-    #                         '!k': kat,
-    #                         '!x': xbit_module,
-    #                         '!d': distrowatch,
-    #                         '!l': linuxtracker,
-    #                         '!s': sky
-    #                         }
-    #         return self._modules
-    #     else:
-    #         self.logger.debug("Config file not setup!")
-
-    #     self._modules = {
-    #                         '!d': distrowatch,
-    #                         '!l': linuxtracker
-    #                         }
-
-    #     return self._modules
+            print('Invalid command! Try `!h` or `help` for help.')
 
     def _caller(self, module, query):
         """
@@ -105,29 +70,27 @@ class InteractiveMode:
             click.prompt("You called an invalid module or provided an empty query. Module: {}, query: {}".format(module, query))
             self.logger.debug("Called an invalid module or provided an empty query.")
 
-    @staticmethod
-    def _interactive_help():
+    # @staticmethod
+    def _interactive_help(self):
         """
         Display help
         """
-        help_text = """
+        default_help_text = """
             Available commands:
         !h or help  - Help text (this)
         !q or quit  - Quit interactive mode
-        !t <string> - Search on LinuxTorrents
-        !d <string> - Search on DistroWatch
-
-        =========== Private modules. Requires Config file ==========
-        !n <string> - Search on nyaa.si for anime.
-        !t <string> - Search on ThePirateBay.
-        !k <string> - Search on KickAssTorrents.
-        !s <string> - Search on SkyTorrents
-        !x <string> - Search on XBit.pw
-        =============================================================
-        These commands are only available after a `config.ini` file has been set.
-        See the documentation for more information.
         """
-        click.prompt(help_text)
+
+        modules_help_text = """ 
+            Available modules :
+        """
+        modules = self.load_modules()
+        for key, value in modules.items():
+            modules_help_text +=  "\r\n\t" + key + ' <string> - ' + value.cli.__doc__
+            
+        help_text = default_help_text + '\r\n' + modules_help_text
+
+        print(help_text)
 
 
 def inter():

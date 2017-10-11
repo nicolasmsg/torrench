@@ -10,13 +10,12 @@ import click
 
 CMD_NAME = 'nyaa'
 
-
 @click.command('nyaa', short_help='search on NyaaTracker.')
 @click.argument('search')
 @pass_torrench
 @click.pass_context
 def cli(ctx, torrench, search):
-    """Initializes a repository."""
+    """Search on nyaa tracker."""
     click.echo('search on NyaaTracker')
     torrench.input_title = search 
     main(torrench.input_title)
